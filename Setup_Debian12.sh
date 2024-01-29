@@ -1,32 +1,36 @@
 #!/bin/bash
+USERNAME='whoami'
 
 ## Variables setup ##
-USERNAME='victorhtf'
-DESKTOP_DIRECTORY="$HOME/'Área de Trabalho'"
 DOWNLOAD_DIRECTORY="$HOME/Downloads"
-APPLICATIONS_DIRECTORY="$HOME/$DOWNLOAD_DIRECTORY/applications"
+APPLICATIONS_DIRECTORY="$DOWNLOAD_DIRECTORY/applications"
 BACKUP_DIRECTORY="$HOME/Backups"
 DEBIAN_DIRECTORY="$HOME/Debian"
-MODEL_DIRECTORY="$HOME/$USERNAME/Models"
+TEMPLATE_DIRECTORY="$HOME/Templates"
+CONF_FILE_ORIGIN="$HOME/Downloads/Backup/home/$USERNAME/Backups/conf"
+CONF_FILE_DESTINATION="$HOME/Debian/conf"
+SCRIPTS_FILES_ORIGIN="$HOME/Downloads/Backup/home/$USERNAME/Backups/scripts"
+SCRIPTS_FILE_DESTINATION="$HOME/Debian/scripts"
 
 
 ## Folders to create in /Backup/ ##
-BACKUP_DIRECTORIES=(
-  "$DEBIAN_DIRECTORY/.conf"
+DIRECTORIES=(
+  "$DEBIAN_DIRECTORY/conf"
   "$DEBIAN_DIRECTORY/scripts"
   "$DEBIAN_DIRECTORY/dump"
+  "$HOME/Pictures/Wallpapers"
 )
 
-## Models files to insert in Models folder ##
-MODELS=(
-  ".txt"
-  ".sh"
-  ".xlsx"
-  ".csv"
-  ".docx"
+## Template files to insert in template folder ##
+TEMPLATES=(
+  "Text-file.txt"
+  "Bash-script.sh"
+  "Sheets-file.xlsx"
+  "CSV-file.csv"
+  "Document-file.docx"
 )
 
-KEYBIND_CONFIG_FILE="$HOME/$USERNAME/$BACKUP_DIRECTORY/conf/keyboard-binds.conf"
+KEYBIND_CONFIG_FILE="$DEBIAN_DIRECTORY/conf/keyboard-binds.conf"
 
 
 ## Git config ##
@@ -34,9 +38,12 @@ GIT_NAME="Victor Formisano"
 GIT_EMAIL="victorformisano10@gmail.com"
 
 ## External link to applications ##
-EDGE_REPO="https://go.microsoft.com/fwlink?linkid=2149051&brand=M102"
-VSCODE_REPO="https://code.visualstudio.com/docs/?dv=linux64_deb"
-SPOTIFY_REPO=
+EDGE_REPO="https://go.microsoft.com/fwlink?linkid=2149051&brand=M102.deb"
+VSCODE_REPO="https://vscode.download.prss.microsoft.com/dbazure/download/stable/0ee08df0cf4527e40edc9aa28f4b5bd38bbff2b2/code_1.85.1-1702462158_amd64.deb"
+RUNDECK_REPO="https://packagecloud.io/pagerduty/rundeck/packages/any/any/rundeck_5.0.1.20240115-1_all.deb/download.deb?distro_version_id=35"  
+STEAM_REPO="https://cdn.akamai.steamstatic.com/client/installer/steam.deb"
+TELEGRAM_REPO="https://telegram.org/dl/desktop/linux"
+WPS_REPO="https://wdl1.pcfg.cache.wpscdn.com/wpsdl/wpsoffice/download/linux/11711/wps-office_11.1.0.11711.XA_amd64.deb"
 
 
 ## Terminal colors ##
@@ -52,9 +59,16 @@ APT_PACKAGES=(
   cmatrix
   ffmpeg
   fdisk
+  python3-launchpadlib
+  openjdk-11-jre-headless
+  software-properties-common
   gimp
   gdebi
+  net-tools
+  gparted
+  wine
   git
+  gnome-shell-extension-manager
   gnome-boxes
   gnome-sushi
   gnome-tweaks
@@ -72,12 +86,13 @@ APT_PACKAGES=(
   firmware-linux
   firmware-linux-nonfree
   python3
-  )
+)
 
 FLATPAK_PACKAGES=(
   nl.hjdskes.gcolor3
   org.telegram.desktop
   com.github.flxzt.rnote
+  org.gabmus.hydrapaper
   com.stremio.Stremio
   io.github.lainsce.Colorway
   io.dbeaver.DBeaverCommunity
@@ -86,19 +101,19 @@ FLATPAK_PACKAGES=(
   com.github.rajsolai.textsnatcher
   com.github.calo001.fondo
   org.librehunt.Organizer
-  )
+)
 
 SNAP_PACKAGES=(
   notion-snap-reborn
   todoist
   postman
-  john-the-riper
-  )
+  john-the-ripper
+)
 
 
 ## Print success message in green ##
 print_success() {
-  echo -e "${GREEN}[OK] - $1${NC}"
+  echo -e "${GREEN}[OK] - $1${NC}\n\n"
 }
 
 ## Print info message in orange ##
@@ -108,21 +123,53 @@ print_info() {
 
 ## Print error message in red ##
 print_error() { 
-  echo -e "${RED}[ERROR] - $1${NC}"
+  echo -e "${RED}[ERROR] - $1${NC}\n\n"
 }
 
-## Removing APT locks ##
-remove_apt_locks() {  
-  sudo rm /var/lib/dpkg/lock-frontend
-  sudo rm /var/cache/apt/archives/lock
-}
+
 
 ## Verify root permissions ##
 verify_root() {
   print_info "Verifying root permissions..."
   if [ "$EUID" -ne 0 ]; then
     print_info "Please run this script as root."
-    exit 1
+  fi
+}
+
+## Removing APT locks ##
+remove_apt_locks() {
+  print_info "Removing APT locks..."
+  
+  # Check and remove /var/lib/apt/lists/lock
+  if [ -f /var/lib/apt/lists/lock ]; then
+    sudo rm /var/lib/apt/lists/lock
+    print_success "Removed /var/lib/apt/lists/lock."
+  else
+    print_info "/var/lib/apt/lists/lock does not exist."
+  fi
+
+  # Check and remove /var/cache/apt/archives/lock
+  if [ -f /var/cache/apt/archives/lock ]; then
+    sudo rm /var/cache/apt/archives/lock
+    print_success "Removed /var/cache/apt/archives/lock."
+  else
+    print_info "/var/cache/apt/archives/lock does not exist."
+  fi
+
+  # Check and remove /var/lib/dpkg/lock
+  if [ -f /var/lib/dpkg/lock ]; then
+    sudo rm /var/lib/dpkg/lock
+    print_success "Removed /var/lib/dpkg/lock."
+  else
+    print_info "/var/lib/dpkg/lock does not exist."
+  fi
+
+  # Check and remove /var/lib/dpkg/lock-frontend
+  if [ -f /var/lib/dpkg/lock-frontend ]; then
+    sudo rm /var/lib/dpkg/lock-frontend
+    print_success "Removed /var/lib/dpkg/lock-frontend."
+  else
+    print_info "/var/lib/dpkg/lock-frontend does not exist."
   fi
 }
 
@@ -140,20 +187,9 @@ sudo_user() {
 }
 
 
-## Testing internet connection ##
-internet_test() {
-  print_info "Checking internet connection..."
-
-  if ! curl -sSf http://www.google.com >/dev/null; then
-    print_error "[ERROR] - Internet connection not available."
-    exit 1
-  else
-    print_success "[INFO] - Internet connection is okay."
-  fi
-}
-
 ## Updating repositories ##
 external_repositories() {
+	#COlocar msgs de print aqi
   # Debian repositories
   deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware
   deb-src http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware
@@ -164,62 +200,64 @@ external_repositories() {
   deb http://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware
   deb-src http://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware
 
+  #Lutris repository
+  echo "deb [signed-by=/etc/apt/keyrings/lutris.gpg] https://download.opensuse.org/repositories/home:/strycore/Debian_12/ ./" | sudo tee /etc/apt/sources.list.d/lutris.list > /dev/null
+  wget -q -O- https://download.opensuse.org/repositories/home:/strycore/Debian_12/Release.key | gpg --dearmor | sudo tee /etc/apt/keyrings/lutris.gpg > /dev/null
+
+  #Wine repository
+  sudo mkdir -pm755 /etc/apt/keyrings
+  sudo wget -O /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key
+
   #Colocar aqui todos os outros repositórios que estão no resto do código
+  #PRINT_SUCCESS
 }
 
 ## Update system ##
 update_system() {
   print_info "Updating system..."
-
-  sudo apt update && apt upgrade -y
+  sudo apt-get update && sudo apt-get upgrade -y
   print_success "System updated successfully."
 }
 
 ## Removing GNOME Games ##
 remove_games() {
   print_info "Removing GNOME games..."
-  sudo apt purge iagno lightsoff four-in-a-row gnome-robots pegsolitaire gnome-2048 hitori gnome-klotski gnome-mines gnome-mahjongg gnome-sudoku quadrapassel swell-foop gnome-tetravex gnome-taquin aisleriot gnome-chess five-or-more gnome-nibbles tali ; sudo apt autoremove
-  print_success "MOSTRAR AQUI O NOME DE CADA APP DESINSTALADO"
+  sudo apt purge iagno lightsoff four-in-a-row gnome-robots pegsolitaire gnome-2048 hitori gnome-klotski gnome-mines gnome-mahjongg gnome-sudoku quadrapassel swell-foop gnome-tetravex gnome-taquin aisleriot gnome-chess five-or-more gnome-nibbles tali -y ; sudo apt autoremove
+  print_success "Games uninstalled with success"
 }
 
 remove_libreoffice() {
   print_info "Removing Libreoffice apps..."
-  sudo apt-get remove --purge "libreoffice*"
+  sudo apt-get remove --purge "libreoffice*" -y
     print_success "Libreoffice apps successfully uninstalled"
 
 }
 
 
-general_settings() {
-  print_info "Settings general configs..."
-
-  cd conf
-  cp keyboard-binds.conf /home/$USERNAME/.config/
-}
-
 
 ## Creating Folders and giving permissions to access ##
-folders_create() {
+create_folders() {
   print_info "Creating folders..."
   for dir in "${DIRECTORIES[@]}"; do
     mkdir -p "$dir"
+    chmod 775 "$dir"
     print_success "Folder successfully created: $dir"
   done
 }
 
 
-## Change Desktop folder name ##
-rename_desktop() {
-  print_info "Changing desktop folder name..."
-
-  if [ -d "$DESKTOP_DIRECTORY" ]; then
-    new_name="Desktop"
-    mv "$DESKTOP_DIRECTORY" "/home/$USER/$new_name"
-    print_success "Desktop directory changed to $new_name."
-  else
-    print_error "Desktop directory not found."
-  fi
+copy_config_files() {
+  print_info "Copying CONF files..."
+  cp -r "$CONF_FILE_ORIGIN/." "$CONF_FILE_DESTINATION"
+  print_success "CONF files copied successfully."
 }
+
+copy_scripts_files() {
+  print_info "Copying SCRIPTS files..."
+  cp -r "$SCRIPTS_FILES_ORIGIN/." "$SCRIPTS_FILE_DESTINATION"
+  print_success "SCRIPTS files copied successfully."
+}
+
 
 
 ## Creating bash aliases link ##
@@ -229,15 +267,15 @@ create_bash_aliases_link() {
   print_success "Bash aliases link created successfully."
 }
 
-## Create Models ##
-create_models() {
-  print_info "Creating files models..."
+## Create templates ##
+create_templates() {
+  print_info "Creating files templates..."
 
-  for model in "${MODELS[@]}"; do
-    touch "$MODEL_DIRECTORY/$model"
+  for template in "${TEMPLATES[@]}"; do
+    touch "$TEMPLATE_DIRECTORY/$template"
   done
 
-  print_success "Modelos criados com sucesso em $MODEL_DIRECTORY."
+  print_success "Templates criados com sucesso em $TEMPLATE_DIRECTORY."
 }
 
 
@@ -248,10 +286,19 @@ install_apt_packages() {
   sudo apt --fix-broken install -y
 
   for package in "${APT_PACKAGES[@]}"; do
+    sudo apt install $package -y
     print_success "Package $package installed successfully." || print_error "Error installing package $package"
   done
 }
 
+
+## Install snapd ##
+install_snapd() {
+  print_info "Installing Snap package management tools..."
+  sudo apt-get update
+  sudo apt-get install snapd -y
+  print_success "Snap installed successfully."
+}
 
 
 ## Install Flatpak packages ##
@@ -264,18 +311,31 @@ install_flatpak() {
 
   if ! command -v flatpak &> /dev/null; then
     print_error "Flatpak not installed. Please check the installation."
-    exit 1
   fi
 }
 
 
 
 ## Install Snap packages ## 
-install_snapd() {
-  print_info "Installing Snapd..."
-  sudo apt install snapd -y
-  sudo snap install "${SNAP_PACKAGES[@]}"
-  print_success "Snap packages installed successfully."
+install_snaps() {
+    for package in "${SNAP_PACKAGES[@]}"; do
+        if ! snap list "$package" >/dev/null 2>&1; then
+            print_success "Installing $package..."
+            sudo snap install "$package" --classic
+        else
+            print_info "$package is already installed."
+        fi
+    done
+}
+
+## Install Lutris ##
+install_lutris() {
+  print_info "Installing Lutris..."
+  sudo add-apt-repository ppa:lutris-team/lutris
+  sudo apt update
+  sudo apt install lutris -y
+  print_success
+
 }
 
 
@@ -287,13 +347,31 @@ install_external_applications() {
   cd "$APPLICATIONS_DIRECTORY"
 
   wget -c "$EDGE_REPO" -P "$APPLICATIONS_DIRECTORY"
-
   wget -c "$VSCODE_REPO" -P "$APPLICATIONS_DIRECTORY"
+  wget -c "$TELEGRAM_REPO" -P "$APPLICATIONS_DIRECTORY"
+  wget -c "$STEAM_REPO" -P "$APPLICATIONS_DIRECTORY"
+  wget -c "$WPS_REPO" -P "$APPLICATIONS_DIRECTORY"
+  
 
-  sudo dpkg -i --refuse-downgrade *.deb || apt --fix-broken install -y
-  print_success "External applications downloaded and installed successfully."
+  # Check if any .deb files are present before attempting installation
+  deb_files=("$APPLICATIONS_DIRECTORY"/*.deb)
+  if [ ${#deb_files[@]} -gt 0 ]; then
+    sudo dpkg -i --refuse-downgrade "${deb_files[@]}" || sudo apt --fix-broken install -y
+    print_success "External applications downloaded and installed successfully."
+  else
+    print_error "No .deb files found in $APPLICATIONS_DIRECTORY."
+  fi
 }
 
+
+## Install Wine ##
+install_wine() {
+  print_info "Installing wine..."
+  sudo wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/debian/dists/bookworm/winehq-bookworm.sources
+  sudo apt update
+  sudo apt install --install-recommends winehq-stable
+  print_success "Wine installed successfully."
+}
 
 
 ## Install Docker ## 
@@ -307,6 +385,10 @@ install_docker() {
     $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
   sudo apt-get update
   sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+  sudo groupadd docker
+  sudo usermod -aG docker $USER
+  
   print_success "Docker installed successfully."
 }
 
@@ -317,7 +399,6 @@ install_putty() {
   sudo apt-get install -y putty
   if ! command -v putty &> /dev/null; then
     print_error "PuTTY installation failed. Please check the installation."
-    exit 1
   else
     print_success "PuTTY installed successfully."
   fi
@@ -339,13 +420,11 @@ install_spotify() {
 }
 
 
-
 ## Setup aliases in ~/.bashrc ##
 setup_aliases() {
   echo "Setting up bash aliases"
   echo 'alias ..="cd .."' >> ~/.bashrc
   echo 'alias aliasconf="code ~/.bash_aliases"' >> ~/.bashrc
-  echo 'alias cdd="cd /home/victorhtf/Desktop"' >> ~/.bashrc
   echo 'alias dir="dir --color=auto"' >> ~/.bashrc
   echo 'alias dup="docker up"' >> ~/.bashrc
   echo 'alias duprb="docker compose up -d --force-recreate --build"' >> ~/.bashrc
@@ -365,7 +444,6 @@ setup_aliases() {
   echo 'alias ports="sudo netstat -tulanp"' >> ~/.bashrc
   echo 'alias su="su -"' >> ~/.bashrc
   echo 'alias upd="sudo apt update && sudo apt upgrade -y"' >> ~/.bashrc
-  echo 'alias ll="ls -al"' >> ~/.bashrc
   echo 'alias atualizar="sudo apt update && sudo apt upgrade -y"' >> ~/.bashrc
 
   echo "Bash aliases set up successfully."
@@ -384,18 +462,27 @@ setup_gitcredentials() {
 
 ## Setup keyboard binds ##
 setup_keybinds() {
-
   print_info "Setting up keybinds..."
 
   if [ -f "$KEYBIND_CONFIG_FILE" ]; then
-    while IFS= read -r line; do
-      gsettings set $line
+    while IFS=' ' read -r schema path key value; do
+      # Verifica se a chave é uma lista
+      if [[ "$value" =~ ^\[.*\]$ ]]; then
+        # Remove os colchetes da lista e converte para array
+        value=$(echo "$value" | sed 's/^\[\(.*\)\]$/\1/' | tr ',' '\n')
+        value=($value)
+        # Configura cada valor da lista
+        for val in "${value[@]}"; do
+          gsettings set "$schema" "$key" "$val"
+        done
+      else
+        gsettings set "$schema" "$key" "$value"
+      fi
     done < "$KEYBIND_CONFIG_FILE"
 
     print_success "Keyboard binds configured successfully."
   else
-    print_error "Error: Configuration file not found in: $CONFIG_FILE"
-    exit 1
+    print_error "Error: Configuration file not found in: $KEYBIND_CONFIG_FILE"
   fi
 }
 
@@ -403,7 +490,7 @@ setup_keybinds() {
 ## Setup DCONF settings ##
 dconf_setup() {
   print_info "Setting up DCONF..."
-  dconf load / < $BACKUP_DIRECTORY/conf/dconf-general-settings.ini
+  dconf load / < $DEBIAN_DIRECTORY/conf/dconf-general-settings.ini
   print_success "DCONF settings configured successfully."
 }
 
@@ -429,7 +516,7 @@ finish_setup() {
   case "$choice" in 
     y|Y ) 
       print_success "Rebooting system..."
-      reboot
+      sudo reboot
       ;;
     n|N ) 
       print_info "Not rebooting. Your system will not be affected until the next restart."
@@ -442,29 +529,32 @@ finish_setup() {
 
 
 # Starting functions
-# remove_apt_locks
+
 # verify_root
 # sudo_user
-# internet_test
+# remove_apt_locks
 # update_system
 # remove_games
 # remove_libreoffice
-# general_settings
-# create_models
-# folders_create
-# rename_desktop
+# create_templates 
+create_folders
+# copy_config_files
+# copy_scripts_files
 # create_bash_aliases_link
 # install_external_applications
 # install_apt_packages
 # install_putty
 # install_flatpak
+# install_snapd
 # install_snaps
+# install_lutris
 # install_docker
+# install_wine
 # install_spotify
 # setup_aliases
 # setup_gitcredentials
-# setup_gnomesettings
 # setup_keybinds
 # dconf_setup
+# setup_gnomesettings
 # finish_setup
-# gnome-session-properties
+
