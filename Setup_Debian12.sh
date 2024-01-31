@@ -1,5 +1,5 @@
 #!/bin/bash
-USERNAME='whoami'
+USERNAME='victorhtf'
 
 ## Variables setup ##
 DOWNLOAD_DIRECTORY="$HOME/Downloads"
@@ -91,8 +91,11 @@ APT_PACKAGES=(
 FLATPAK_PACKAGES=(
   nl.hjdskes.gcolor3
   org.telegram.desktop
+  flathub org.localsend.localsend_app
+  org.bluesabre.MenuLibre
   com.github.flxzt.rnote
-  org.gabmus.hydrapaper
+  com.mattjakeman.ExtensionManager
+  io.github.realmazharhussain.GdmSettings
   com.stremio.Stremio
   io.github.lainsce.Colorway
   io.dbeaver.DBeaverCommunity
@@ -189,7 +192,6 @@ sudo_user() {
 
 ## Updating repositories ##
 external_repositories() {
-	#COlocar msgs de print aqi
   # Debian repositories
   deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware
   deb-src http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware
@@ -200,16 +202,6 @@ external_repositories() {
   deb http://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware
   deb-src http://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware
 
-  #Lutris repository
-  echo "deb [signed-by=/etc/apt/keyrings/lutris.gpg] https://download.opensuse.org/repositories/home:/strycore/Debian_12/ ./" | sudo tee /etc/apt/sources.list.d/lutris.list > /dev/null
-  wget -q -O- https://download.opensuse.org/repositories/home:/strycore/Debian_12/Release.key | gpg --dearmor | sudo tee /etc/apt/keyrings/lutris.gpg > /dev/null
-
-  #Wine repository
-  sudo mkdir -pm755 /etc/apt/keyrings
-  sudo wget -O /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key
-
-  #Colocar aqui todos os outros repositórios que estão no resto do código
-  #PRINT_SUCCESS
 }
 
 ## Update system ##
@@ -305,8 +297,8 @@ install_snapd() {
 install_flatpak() {
   print_info "Installing Flatpak packages..."
   sudo apt install flatpak -y
-  flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-  flatpak install flathub ${FLATPAK_PACKAGES[@]} -y
+  sudo flatpak remote-add --if-not-exists  flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+  sudo flatpak install flathub ${FLATPAK_PACKAGES[@]} -y
   print_success "Flatpak packages installed successfully."
 
   if ! command -v flatpak &> /dev/null; then
@@ -328,15 +320,6 @@ install_snaps() {
     done
 }
 
-## Install Lutris ##
-install_lutris() {
-  print_info "Installing Lutris..."
-  sudo add-apt-repository ppa:lutris-team/lutris
-  sudo apt update
-  sudo apt install lutris -y
-  print_success
-
-}
 
 
 ## Download external applications ##
@@ -410,11 +393,11 @@ install_putty() {
 install_spotify() {
   print_info "Installing Spotify..."
 
-  curl -sS https://download.spotify.com/debian/pubkey_7A3A762FAFD4A51F.gpg | sudo gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/spotify.gpg
-
-  echo "deb http://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list > /dev/null
+  curl -sS https://download.spotify.com/debian/pubkey_6224F9941A8AA6D1.gpg | sudo gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/spotify.gpg
+  echo "deb http://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list
 
   sudo apt-get update && sudo apt-get install spotify-client
+
 
   print_success "Spotify installed successfully."
 }
@@ -537,19 +520,17 @@ finish_setup() {
 # remove_games
 # remove_libreoffice
 # create_templates 
-create_folders
+# create_folders
 # copy_config_files
 # copy_scripts_files
 # create_bash_aliases_link
 # install_external_applications
 # install_apt_packages
 # install_putty
-# install_flatpak
+install_flatpak
 # install_snapd
 # install_snaps
-# install_lutris
 # install_docker
-# install_wine
 # install_spotify
 # setup_aliases
 # setup_gitcredentials

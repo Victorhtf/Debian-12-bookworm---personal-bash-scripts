@@ -1,7 +1,7 @@
 #!/bin/bash
 source /home/$USERNAME/Debian/scripts/Backup_Debian12.sh
 
-USERNAME="whoami"
+USERNAME="victorhtf"
 
 SCRIPTS_FOLDER="/home/$USERNAME/Debian/scripts"
 DUMP_FOLDER="/home/$USERNAME/Debian/dump"
