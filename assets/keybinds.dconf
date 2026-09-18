@@ -81,3 +81,4 @@ name='Launch Terminal'
 binding='<Control>space'
 command='/home/victorhtf/debian/scripts/Autowallpaper.sh'
 name='Sort wallpaper'
+
