@@ -220,11 +220,11 @@ remove_games() {
   print_success "Games uninstalled with success"
 }
 
-# remove_libreoffice() {
-#   print_info "Removing Libreoffice apps..."
-#   sudo apt-get remove --purge "libreoffice*" -y
-#     print_success "Libreoffice apps successfully uninstalled"
-# }
+remove_libreoffice() {
+  print_info "Removing Libreoffice apps..."
+  sudo apt-get remove --purge "libreoffice*" -y
+  print_success "Libreoffice apps successfully uninstalled"
+}
 
 
 
@@ -671,51 +671,225 @@ finish_setup() {
 }
 
 
-# Starting functions
-# Ordem importa: preparar sistema -> pastas/copias -> instalar pacotes -> configs.
-# As configs de GNOME (binds/extensoes/cron) rodam por ultimo pois dependem dos
-# arquivos ja copiados por copy_scripts_files / copy_config_files.
+# =====================================================================
+# MENU INTERATIVO
+# Navegue pelos submenus e escolha o que executar. Nada roda sem sua escolha.
+# =====================================================================
 
-## --- Preparacao do sistema --- ##
-# verify_root                 # so avisa se nao for root; opcional
-# sudo_user                   # adicione ao sudoers manualmente (voce pediu)
-# remove_apt_locks            # use so se o apt travar
-update_system
+pause() { echo; read -rp "Pressione Enter para continuar..."; }
 
-## --- Remocoes / limpeza --- ##
-remove_games
-# remove_libreoffice          # desativado (voce pode reativar se quiser)
+## --- Submenu: APPS --- ##
+menu_apps() {
+  while true; do
+    clear
+    echo "===== APPS ====="
+    echo " 1) Instalar pacotes APT"
+    echo " 2) Instalar Flatpaks"
+    echo " 3) Instalar Snapd (gerenciador)"
+    echo " 4) Instalar Snaps"
+    echo " 5) Instalar Docker"
+    echo " 6) Instalar Wine"
+    echo " 7) Instalar PuTTY"
+    echo " 8) Apps externos (.deb: Edge, VSCode, Steam, Telegram)"
+    echo " 9) TUDO de apps (1..8)"
+    echo " 0) Voltar"
+    read -rp "> " o
+    case "$o" in
+      1) install_apt_packages; pause ;;
+      2) install_flatpak; pause ;;
+      3) install_snapd; pause ;;
+      4) install_snaps; pause ;;
+      5) install_docker; pause ;;
+      6) install_wine; pause ;;
+      7) install_putty; pause ;;
+      8) install_external_applications; pause ;;
+      9) install_apt_packages; install_flatpak; install_snapd; install_snaps; \
+         install_docker; install_wine; install_putty; install_external_applications; pause ;;
+      0) return ;;
+      *) echo "Opcao invalida"; sleep 1 ;;
+    esac
+  done
+}
 
-## --- Pastas e copia dos arquivos do repo --- ##
-create_templates
-create_folders
-copy_config_files             # assets/ -> ~/debian/conf
-copy_scripts_files            # scripts/ -> ~/debian/scripts
+## --- Submenu: BACKUPS --- ##
+menu_backups() {
+  while true; do
+    clear
+    echo "===== BACKUPS ====="
+    echo " 1) Agendar backup automatico (cron: exporta binds/extensoes e commita se mudar)"
+    echo " 2) Rodar backup de configs GNOME agora (binds + extensoes -> git)"
+    echo " 3) Rodar backup de arquivos agora (~/debian + wallpapers -> ~/Backups)"
+    echo " 0) Voltar"
+    read -rp "> " o
+    case "$o" in
+      1) setup_backup_cron; pause ;;
+      2) "$SCRIPTS_FILE_DESTINATION/Backup_gnome_config.sh" --push 2>/dev/null \
+           || bash "$REPO_SCRIPTS_DIR/Backup_gnome_config.sh" --push; pause ;;
+      3) "$SCRIPTS_FILE_DESTINATION/Backup_files.sh" 2>/dev/null \
+           || bash "$REPO_SCRIPTS_DIR/Backup_files.sh"; pause ;;
+      0) return ;;
+      *) echo "Opcao invalida"; sleep 1 ;;
+    esac
+  done
+}
 
-## --- Ambiente de shell --- ##
-create_bash_aliases_link
-setup_aliases
-setup_gitcredentials
+## --- Submenu: CONFIGS (GNOME + shell) --- ##
+menu_configs() {
+  while true; do
+    clear
+    echo "===== CONFIGS ====="
+    echo " 1) Aplicar keybinds do repo (dconf) + marcar inicializacao"
+    echo " 2) Instalar extensoes GNOME (download da EGO + restaura settings)"
+    echo " 3) Aplicar dconf geral (dconf-general-settings.ini)"
+    echo " 4) Botao minimizar na barra de titulo"
+    echo " 5) Aliases de shell (~/.bashrc)"
+    echo " 6) Link do ~/.bash_aliases"
+    echo " 7) Credenciais do Git"
+    echo " 8) TODAS as configs (1..7)"
+    echo " 0) Voltar"
+    read -rp "> " o
+    case "$o" in
+      1) setup_keybinds_dconf; pause ;;
+      2) install_gnome_extensions; pause ;;
+      3) dconf_setup; pause ;;
+      4) setup_gnomesettings; pause ;;
+      5) setup_aliases; pause ;;
+      6) create_bash_aliases_link; pause ;;
+      7) setup_gitcredentials; pause ;;
+      8) setup_keybinds_dconf; install_gnome_extensions; dconf_setup; \
+         setup_gnomesettings; setup_aliases; create_bash_aliases_link; setup_gitcredentials; pause ;;
+      0) return ;;
+      *) echo "Opcao invalida"; sleep 1 ;;
+    esac
+  done
+}
 
-## --- Instalacao de pacotes e apps --- ##
-install_apt_packages
-install_external_applications
-install_putty
-install_flatpak
-install_snapd
-install_snaps
-install_docker
-install_wine
-# install_spotify             # removido: nao uso mais
+## --- Submenu: PURGE / LIMPEZA --- ##
+menu_purge() {
+  while true; do
+    clear
+    echo "===== PURGE / LIMPEZA ====="
+    echo " 1) Remover jogos do GNOME"
+    echo " 2) Remover LibreOffice"
+    echo " 3) Ambos (1 e 2)"
+    echo " 0) Voltar"
+    read -rp "> " o
+    case "$o" in
+      1) remove_games; pause ;;
+      2) remove_libreoffice; pause ;;
+      3) remove_games; remove_libreoffice; pause ;;
+      0) return ;;
+      *) echo "Opcao invalida"; sleep 1 ;;
+    esac
+  done
+}
 
-## --- Configuracoes do GNOME (dependem dos arquivos ja copiados) --- ##
-# setup_keybinds              # antigo (formato .conf); substituido por setup_keybinds_dconf
-setup_keybinds_dconf          # carrega assets/keybinds.dconf E cria a sentinela de init
-install_gnome_extensions      # baixa extensoes da EGO + restaura configs
-dconf_setup                   # aplica dconf-general-settings.ini (se existir em assets)
-setup_gnomesettings           # botao minimizar
-setup_backup_cron             # agenda backup periodico (commit+push se houver mudanca)
+## --- Submenu: AMBIENTE (pastas, templates, copias) --- ##
+menu_ambiente() {
+  while true; do
+    clear
+    echo "===== AMBIENTE ====="
+    echo " 1) Criar pastas (~/debian/{conf,scripts,dump}, Wallpapers)"
+    echo " 2) Criar templates (~/Templates)"
+    echo " 3) Copiar assets do repo -> ~/debian/conf"
+    echo " 4) Copiar scripts do repo -> ~/debian/scripts"
+    echo " 5) TUDO de ambiente (1..4)"
+    echo " 0) Voltar"
+    read -rp "> " o
+    case "$o" in
+      1) create_folders; pause ;;
+      2) create_templates; pause ;;
+      3) copy_config_files; pause ;;
+      4) copy_scripts_files; pause ;;
+      5) create_folders; create_templates; copy_config_files; copy_scripts_files; pause ;;
+      0) return ;;
+      *) echo "Opcao invalida"; sleep 1 ;;
+    esac
+  done
+}
 
-## --- Finalizacao --- ##
-finish_setup
+## --- Submenu: SISTEMA --- ##
+menu_sistema() {
+  while true; do
+    clear
+    echo "===== SISTEMA ====="
+    echo " 1) Atualizar sistema (apt update && upgrade)"
+    echo " 2) Remover locks do APT (use se o apt travar)"
+    echo " 3) Adicionar usuario ao sudoers"
+    echo " 4) Finalizar (dist-upgrade + limpeza + reboot opcional)"
+    echo " 0) Voltar"
+    read -rp "> " o
+    case "$o" in
+      1) update_system; pause ;;
+      2) remove_apt_locks; pause ;;
+      3) sudo_user; pause ;;
+      4) finish_setup; pause ;;
+      0) return ;;
+      *) echo "Opcao invalida"; sleep 1 ;;
+    esac
+  done
+}
+
+## --- Instalacao COMPLETA (tudo na ordem correta) --- ##
+run_full_install() {
+  clear
+  echo ">>> Instalacao completa iniciando..."
+  update_system
+  remove_games
+  create_templates
+  create_folders
+  copy_config_files
+  copy_scripts_files
+  create_bash_aliases_link
+  setup_aliases
+  setup_gitcredentials
+  install_apt_packages
+  install_external_applications
+  install_putty
+  install_flatpak
+  install_snapd
+  install_snaps
+  install_docker
+  install_wine
+  setup_keybinds_dconf
+  install_gnome_extensions
+  dconf_setup
+  setup_gnomesettings
+  setup_backup_cron
+  finish_setup
+}
+
+## --- MENU PRINCIPAL --- ##
+main_menu() {
+  while true; do
+    clear
+    echo "############################################"
+    echo "#        SETUP DEBIAN - MENU PRINCIPAL     #"
+    echo "############################################"
+    echo " 1) Apps        (apt, flatpak, snap, docker, wine, externos)"
+    echo " 2) Backups     (cron, backup de configs, backup de arquivos)"
+    echo " 3) Configs     (keybinds, extensoes, dconf, aliases, git)"
+    echo " 4) Purge       (jogos, libreoffice)"
+    echo " 5) Ambiente    (pastas, templates, copiar scripts/assets)"
+    echo " 6) Sistema     (update, locks, sudoers, finalizar)"
+    echo "--------------------------------------------"
+    echo " 9) INSTALACAO COMPLETA (tudo na ordem correta)"
+    echo " 0) Sair"
+    read -rp "> " o
+    case "$o" in
+      1) menu_apps ;;
+      2) menu_backups ;;
+      3) menu_configs ;;
+      4) menu_purge ;;
+      5) menu_ambiente ;;
+      6) menu_sistema ;;
+      9) run_full_install; pause ;;
+      0) echo "Saindo."; exit 0 ;;
+      *) echo "Opcao invalida"; sleep 1 ;;
+    esac
+  done
+}
+
+# Inicia o menu
+main_menu
 
