@@ -63,7 +63,7 @@ GIT_EMAIL="victorformisano10@gmail.com"
 EDGE_REPO="https://go.microsoft.com/fwlink?linkid=2149051&brand=M102.deb"
 VSCODE_REPO="https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64"
 STEAM_REPO="https://cdn.akamai.steamstatic.com/client/installer/steam.deb"
-TELEGRAM_REPO="https://telegram.org/dl/desktop/linux"
+# TELEGRAM_REPO="https://telegram.org/dl/desktop/linux"   # usar Flatpak (org.telegram.desktop)
 # WPS_REPO="https://wdl1.pcfg.cache.wpscdn.com/wpsdl/wpsoffice/download/linux/11711/wps-office_11.1.0.11711.XA_amd64.deb"   # nao uso mais
 
 
@@ -365,9 +365,9 @@ install_external_applications() {
 
   wget -c "$EDGE_REPO" -P "$APPLICATIONS_DIRECTORY"
   wget -c "$VSCODE_REPO" -P "$APPLICATIONS_DIRECTORY"
-  wget -c "$TELEGRAM_REPO" -P "$APPLICATIONS_DIRECTORY"
   wget -c "$STEAM_REPO" -P "$APPLICATIONS_DIRECTORY"
-  # wget -c "$WPS_REPO" -P "$APPLICATIONS_DIRECTORY"   # WPS desativado
+  # Telegram: instalado via Flatpak (org.telegram.desktop), nao aqui.
+  # WPS desativado.
 
   # Check if any .deb files are present before attempting installation
   deb_files=("$APPLICATIONS_DIRECTORY"/*.deb)
@@ -688,7 +688,7 @@ menu_apps() {
     echo " 4) Instalar Snaps"
     echo " 5) Instalar Docker"
     echo " 6) Instalar Wine"
-    echo " 7) Apps externos (.deb: Edge, VSCode, Steam, Telegram)"
+    echo " 7) Apps externos (.deb: Edge, VSCode, Steam)"
     echo " 8) TUDO de apps (1..7)"
     echo " 0) Voltar"
     read -rp "> " o
