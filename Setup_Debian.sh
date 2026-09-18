@@ -109,16 +109,12 @@ APT_PACKAGES=(
 
 FLATPAK_PACKAGES=(
   org.telegram.desktop
-  org.bluesabre.MenuLibre
   com.mattjakeman.ExtensionManager
   io.github.realmazharhussain.GdmSettings
   com.stremio.Stremio
-  io.github.lainsce.Colorway
   io.dbeaver.DBeaverCommunity
   com.rafaelmardojai.Blanket
   com.github.tchx84.Flatseal
-  com.github.rajsolai.textsnatcher
-  io.github.slgobinath.SafeEyes
 )
 
 SNAP_PACKAGES=(
