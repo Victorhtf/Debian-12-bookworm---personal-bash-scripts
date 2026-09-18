@@ -105,6 +105,37 @@ APT_PACKAGES=(
   firmware-linux
   firmware-linux-nonfree
   python3
+
+  # --- Essenciais (kit de sobrevivencia) ---
+  curl
+  ca-certificates
+  gnupg
+  apt-transport-https
+  build-essential
+  unzip
+  zip
+  vim
+  tree
+  jq
+  rsync
+  htop
+
+  # --- Ferramentas modernas de terminal ---
+  nala
+  eza
+  bat
+  ripgrep
+  fd-find
+  zoxide
+  fzf
+  gdu
+  tmux
+  trash-cli
+
+  # --- Rede / midia / desktop ---
+  nmap
+  flameshot
+  yt-dlp
 )
 
 FLATPAK_PACKAGES=(
@@ -431,18 +462,13 @@ setup_aliases() {
 # >>> victor aliases >>>
 alias ..="cd .."
 alias aliasconf="code ~/.bash_aliases"
-alias dir="dir --color=auto"
 alias dup="docker up"
 alias duprb="docker compose up -d --force-recreate --build"
 alias egrep="egrep --color=auto"
 alias fgrep="fgrep --color=auto"
 alias fh="history|grep"
 alias fp="apt list -i | grep"
-alias grep="grep --color=auto"
 alias ips="ip -c -br a"
-alias la="ls -la"
-alias ll="ls -l"
-alias ls="ls --color=auto"
 alias matrix="cmatrix"
 alias mkdir="mkdir -pv"
 alias ff="fastfetch"
@@ -451,6 +477,21 @@ alias ports="sudo netstat -tulanp"
 alias su="su -"
 alias upd="sudo apt update && sudo apt upgrade -y"
 alias atualizar="sudo apt update && sudo apt upgrade -y"
+
+# Ferramentas modernas (nomes de binario do Debian diferem do comando usual)
+alias ls="eza --icons --group-directories-first"
+alias ll="eza -l --icons --group-directories-first"
+alias la="eza -la --icons --group-directories-first"
+alias tree="eza --tree --icons"
+alias bat="batcat"
+alias fd="fdfind"
+alias rg="rg --smart-case"
+alias grep="grep --color=auto"
+alias tp="trash-put"
+# zoxide: 'cd' inteligente (use 'z <pasta>')
+eval "$(zoxide init bash)"
+# fzf: atalhos (Ctrl-R historico, Ctrl-T arquivos)
+[ -f /usr/share/doc/fzf/examples/key-bindings.bash ] && source /usr/share/doc/fzf/examples/key-bindings.bash
 # <<< victor aliases <<<
 EOF
 
