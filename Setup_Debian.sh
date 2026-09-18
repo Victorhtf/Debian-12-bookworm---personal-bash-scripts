@@ -5,12 +5,23 @@ USERNAME='victorhtf'
 ## Assim os arquivos do repo sao encontrados de onde quer que o script rode ##
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+## Resolve o usuario/HOME REAIS mesmo se o script for rodado com sudo.
+## Sem isso, com 'sudo' o $HOME vira /root e os arquivos/config iriam para
+## o usuario errado. Preferimos configurar como o usuario que chamou o sudo.
+if [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != "root" ]; then
+  USERNAME="$SUDO_USER"
+else
+  USERNAME="$(id -un)"
+fi
+USER_HOME="$(getent passwd "$USERNAME" | cut -d: -f6)"
+USER_HOME="${USER_HOME:-$HOME}"
+
 ## Variables setup ##
-DOWNLOAD_DIRECTORY="$HOME/Downloads"
+DOWNLOAD_DIRECTORY="$USER_HOME/Downloads"
 APPLICATIONS_DIRECTORY="$DOWNLOAD_DIRECTORY/applications"
-BACKUP_DIRECTORY="$HOME/Backups"
-DEBIAN_DIRECTORY="$HOME/debian"
-TEMPLATE_DIRECTORY="$HOME/Templates"
+BACKUP_DIRECTORY="$USER_HOME/Backups"
+DEBIAN_DIRECTORY="$USER_HOME/debian"
+TEMPLATE_DIRECTORY="$USER_HOME/Templates"
 
 ## Origem: pastas dentro do proprio repositorio clonado ##
 REPO_SCRIPTS_DIR="$SCRIPT_DIR/scripts"
@@ -284,6 +295,7 @@ EOF
 ## Create templates ##
 create_templates() {
   print_info "Creating files templates..."
+  mkdir -p "$TEMPLATE_DIRECTORY"
 
   for template in "${TEMPLATES[@]}"; do
     touch "$TEMPLATE_DIRECTORY/$template"
@@ -889,6 +901,21 @@ main_menu() {
     esac
   done
 }
+
+# Guard: nao rode com sudo/root. Os comandos que precisam de root ja usam
+# 'sudo' internamente; rodar o script inteiro como root faria os arquivos e
+# as configs (dconf/gsettings) irem para /root em vez da sua home.
+if [ "$(id -u)" -eq 0 ] && [ -z "${SUDO_USER:-}" ]; then
+  echo "NAO rode este script como root/sudo."
+  echo "Rode como seu usuario normal:  bash Setup_Debian.sh"
+  echo "As funcoes que precisam de root pedem a senha do sudo quando necessario."
+  exit 1
+fi
+if [ -n "${SUDO_USER:-}" ]; then
+  echo "Aviso: detectado 'sudo'. Reexecutando como o usuario '$SUDO_USER' para evitar"
+  echo "que arquivos/config vao para /root..."
+  exec sudo -u "$SUDO_USER" -H bash "${BASH_SOURCE[0]}" "$@"
+fi
 
 # Inicia o menu
 main_menu
