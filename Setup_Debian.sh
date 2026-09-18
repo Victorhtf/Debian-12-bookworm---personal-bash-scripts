@@ -409,19 +409,6 @@ install_docker() {
 }
 
 
-## Install PuTTY ##
-install_putty() {
-  print_info "Installing PuTTY..."
-  sudo apt-get install -y putty
-  if ! command -v putty &> /dev/null; then
-    print_error "PuTTY installation failed. Please check the installation."
-  else
-    print_success "PuTTY installed successfully."
-  fi
-}
-
-
-
 ## Install Spotify ## (removido: nao uso mais)
 # install_spotify() {
 #   print_info "Installing Spotify..."
@@ -701,9 +688,8 @@ menu_apps() {
     echo " 4) Instalar Snaps"
     echo " 5) Instalar Docker"
     echo " 6) Instalar Wine"
-    echo " 7) Instalar PuTTY"
-    echo " 8) Apps externos (.deb: Edge, VSCode, Steam, Telegram)"
-    echo " 9) TUDO de apps (1..8)"
+    echo " 7) Apps externos (.deb: Edge, VSCode, Steam, Telegram)"
+    echo " 8) TUDO de apps (1..7)"
     echo " 0) Voltar"
     read -rp "> " o
     case "$o" in
@@ -713,10 +699,9 @@ menu_apps() {
       4) install_snaps; pause ;;
       5) install_docker; pause ;;
       6) install_wine; pause ;;
-      7) install_putty; pause ;;
-      8) install_external_applications; pause ;;
-      9) install_apt_packages; install_flatpak; install_snapd; install_snaps; \
-         install_docker; install_wine; install_putty; install_external_applications; pause ;;
+      7) install_external_applications; pause ;;
+      8) install_apt_packages; install_flatpak; install_snapd; install_snaps; \
+         install_docker; install_wine; install_external_applications; pause ;;
       0) return ;;
       *) echo "Opcao invalida"; sleep 1 ;;
     esac
@@ -857,7 +842,6 @@ run_full_install() {
   setup_gitcredentials
   install_apt_packages
   install_external_applications
-  install_putty
   install_flatpak
   install_snapd
   install_snaps
