@@ -410,10 +410,25 @@ install_external_applications() {
 ## Install Wine ##
 install_wine() {
   print_info "Installing wine..."
+
+  # Habilita arquitetura i386 (o repo do WineHQ exige amd64 + i386)
+  sudo dpkg --add-architecture i386
+
+  # Baixa a CHAVE GPG do WineHQ para o caminho que o .sources referencia
+  # (Signed-By: /etc/apt/keyrings/winehq-archive.key). Sem isso o repo fica
+  # "not signed" e o apt recusa.
+  sudo mkdir -p /etc/apt/keyrings
+  sudo wget -O /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key
+
+  # Baixa o arquivo de repositorio (.sources) para o trixie
   sudo wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/debian/dists/trixie/winehq-trixie.sources
+
   sudo apt update
-  sudo apt install --install-recommends winehq-stable
-  print_success "Wine installed successfully."
+  if sudo apt install --install-recommends -y winehq-stable; then
+    print_success "Wine installed successfully."
+  else
+    print_error "Falha ao instalar o Wine. Verifique a chave/repositorio do WineHQ."
+  fi
 }
 
 
@@ -570,7 +585,9 @@ install_gnome_extensions() {
   local ext_settings="$REPO_ASSETS_DIR/gnome-extensions-settings.dconf"
 
   if [ ! -f "$ext_list" ]; then
-    print_error "Extension list not found: $ext_list"
+    print_info "Lista de extensoes ainda nao existe ($ext_list)."
+    print_info "Isso e normal na primeira instalacao. Depois de habilitar suas extensoes,"
+    print_info "rode 'Backup_gnome_config.sh' para gerar a lista e versiona-la no repo."
     return
   fi
 
