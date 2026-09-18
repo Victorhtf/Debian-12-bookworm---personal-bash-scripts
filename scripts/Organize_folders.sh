@@ -1,11 +1,15 @@
 #!/bin/bash
+#
+# Organize_folders.sh - organiza uma pasta informada em subpastas por tipo (interativo).
+
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config.sh"
 
 # Prompt user for the directory path
 read -e -p "Enter the directory path to be organized: " DIRECTORY_PATH
 
 # Check if the directory exists
 if [ ! -d "$DIRECTORY_PATH" ]; then
-    echo "Directory not found. Exiting the script."
+    print_error "Directory not found. Exiting the script."
     exit 1
 fi
 

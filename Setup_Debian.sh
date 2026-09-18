@@ -1,0 +1,721 @@
+#!/bin/bash
+USERNAME='victorhtf'
+
+## Diretorio onde este script (e os arquivos que o acompanham) estao ##
+## Assim os arquivos do repo sao encontrados de onde quer que o script rode ##
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+## Variables setup ##
+DOWNLOAD_DIRECTORY="$HOME/Downloads"
+APPLICATIONS_DIRECTORY="$DOWNLOAD_DIRECTORY/applications"
+BACKUP_DIRECTORY="$HOME/Backups"
+DEBIAN_DIRECTORY="$HOME/debian"
+TEMPLATE_DIRECTORY="$HOME/Templates"
+
+## Origem: pastas dentro do proprio repositorio clonado ##
+REPO_SCRIPTS_DIR="$SCRIPT_DIR/scripts"
+REPO_ASSETS_DIR="$SCRIPT_DIR/assets"
+
+## Destino: pasta padrao de scripts e de configuracoes ##
+CONF_FILE_DESTINATION="$DEBIAN_DIRECTORY/conf"
+SCRIPTS_FILE_DESTINATION="$DEBIAN_DIRECTORY/scripts"
+
+
+## Folders to create in /Backup/ ##
+DIRECTORIES=(
+  "$DEBIAN_DIRECTORY/conf"
+  "$DEBIAN_DIRECTORY/scripts"
+  "$DEBIAN_DIRECTORY/dump"
+  "$HOME/Pictures/Wallpapers"
+)
+
+## Template files to insert in template folder ##
+TEMPLATES=(
+  "Text-file.txt"
+  "Bash-script.sh"
+  "Sheets-file.xlsx"
+  "CSV-file.csv"
+  "Document-file.docx"
+)
+
+KEYBIND_CONFIG_FILE="$DEBIAN_DIRECTORY/conf/keyboard-binds.conf"
+
+## Keybinds em formato dconf load (mantido na pasta assets do repo) ##
+KEYBIND_DCONF_FILE="$REPO_ASSETS_DIR/keybinds.dconf"
+
+
+## Git config ##
+GIT_NAME="Victor Formisano"
+GIT_EMAIL="victorformisano10@gmail.com"
+
+## External link to applications ##
+EDGE_REPO="https://go.microsoft.com/fwlink?linkid=2149051&brand=M102.deb"
+VSCODE_REPO="https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64"
+STEAM_REPO="https://cdn.akamai.steamstatic.com/client/installer/steam.deb"
+TELEGRAM_REPO="https://telegram.org/dl/desktop/linux"
+# WPS_REPO="https://wdl1.pcfg.cache.wpscdn.com/wpsdl/wpsoffice/download/linux/11711/wps-office_11.1.0.11711.XA_amd64.deb"   # nao uso mais
+
+
+## Terminal colors ##
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+ORANGE='\033[0;33m'
+NC='\033[0m'
+
+APT_PACKAGES=(
+  dbus
+  aircrack-ng
+  btop
+  cmatrix
+  ffmpeg
+  fdisk
+  python3-launchpadlib
+  gimp
+  gdebi
+  net-tools
+  gparted
+  wine
+  git
+  gnome-shell-extension-manager
+  gnome-boxes
+  gnome-sushi
+  gnome-tweaks
+  ncdu
+  fastfetch
+  netbase
+  net-tools
+  netcat-openbsd
+  nodejs
+  npm
+  wget
+  vlc
+  wireless-tools
+  firmware-amd-graphics
+  firmware-linux
+  firmware-linux-nonfree
+  python3
+)
+
+FLATPAK_PACKAGES=(
+  org.telegram.desktop
+  org.bluesabre.MenuLibre
+  com.mattjakeman.ExtensionManager
+  io.github.realmazharhussain.GdmSettings
+  com.stremio.Stremio
+  io.github.lainsce.Colorway
+  io.dbeaver.DBeaverCommunity
+  com.rafaelmardojai.Blanket
+  com.github.tchx84.Flatseal
+  com.github.rajsolai.textsnatcher
+  io.github.slgobinath.SafeEyes
+)
+
+SNAP_PACKAGES=(
+  postman
+  john-the-ripper
+)
+
+
+## Print success message in green ##
+print_success() {
+  echo -e "${GREEN}[OK] - $1${NC}\n\n"
+}
+
+## Print info message in orange ##
+print_info() {
+  echo -e "${ORANGE}[INFO] - $1${NC}"
+}
+
+## Print error message in red ##
+print_error() { 
+  echo -e "${RED}[ERROR] - $1${NC}\n\n"
+}
+
+
+
+## Verify root permissions ##
+verify_root() {
+  print_info "Verifying root permissions..."
+  if [ "$EUID" -ne 0 ]; then
+    print_info "Please run this script as root."
+  fi
+}
+
+## Removing APT locks ##
+remove_apt_locks() {
+  print_info "Removing APT locks..."
+  
+  # Check and remove /var/lib/apt/lists/lock
+  if [ -f /var/lib/apt/lists/lock ]; then
+    sudo rm /var/lib/apt/lists/lock
+    print_success "Removed /var/lib/apt/lists/lock."
+  else
+    print_info "/var/lib/apt/lists/lock does not exist."
+  fi
+
+  # Check and remove /var/cache/apt/archives/lock
+  if [ -f /var/cache/apt/archives/lock ]; then
+    sudo rm /var/cache/apt/archives/lock
+    print_success "Removed /var/cache/apt/archives/lock."
+  else
+    print_info "/var/cache/apt/archives/lock does not exist."
+  fi
+
+  # Check and remove /var/lib/dpkg/lock
+  if [ -f /var/lib/dpkg/lock ]; then
+    sudo rm /var/lib/dpkg/lock
+    print_success "Removed /var/lib/dpkg/lock."
+  else
+    print_info "/var/lib/dpkg/lock does not exist."
+  fi
+
+  # Check and remove /var/lib/dpkg/lock-frontend
+  if [ -f /var/lib/dpkg/lock-frontend ]; then
+    sudo rm /var/lib/dpkg/lock-frontend
+    print_success "Removed /var/lib/dpkg/lock-frontend."
+  else
+    print_info "/var/lib/dpkg/lock-frontend does not exist."
+  fi
+}
+
+
+## Add the input user to sudoers file ##
+sudo_user() {
+  print_info "Adding user to sudoers file..."
+  
+  if ! grep -q "$USERNAME ALL=(ALL:ALL) ALL" /etc/sudoers; then
+    echo "$USERNAME ALL=(ALL:ALL) ALL" >> /etc/sudoers
+    print_success "User $USERNAME added to sudo group successfully."
+  else
+    print_info "User $USERNAME is already in sudoers file."
+  fi
+}
+
+
+## Updating repositories ##
+external_repositories() {
+  # Debian repositories
+  deb http://deb.debian.org/debian trixie main contrib non-free non-free-firmware
+  deb-src http://deb.debian.org/debian trixie main contrib non-free non-free-firmware
+
+  deb http://deb.debian.org/debian-security trixie-security main contrib non-free non-free-firmware
+  deb-src http://deb.debian.org/debian-security trixie-security main contrib non-free non-free-firmware
+
+  deb http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware
+  deb-src http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware
+
+}
+
+## Update system ##
+update_system() {
+  print_info "Updating system..."
+  sudo apt-get update && sudo apt-get upgrade -y
+  print_success "System updated successfully."
+}
+
+## Removing GNOME Games ##
+remove_games() {
+  print_info "Removing GNOME games..."
+  sudo apt purge iagno lightsoff four-in-a-row gnome-robots pegsolitaire gnome-2048 hitori gnome-klotski gnome-mines gnome-mahjongg gnome-sudoku quadrapassel swell-foop gnome-tetravex gnome-taquin aisleriot gnome-chess five-or-more gnome-nibbles tali -y ; sudo apt autoremove
+  print_success "Games uninstalled with success"
+}
+
+# remove_libreoffice() {
+#   print_info "Removing Libreoffice apps..."
+#   sudo apt-get remove --purge "libreoffice*" -y
+#     print_success "Libreoffice apps successfully uninstalled"
+# }
+
+
+
+## Creating Folders and giving permissions to access ##
+create_folders() {
+  print_info "Creating folders..."
+  for dir in "${DIRECTORIES[@]}"; do
+    mkdir -p "$dir"
+    chmod 775 "$dir"
+    print_success "Folder successfully created: $dir"
+  done
+}
+
+
+copy_config_files() {
+  print_info "Copying CONF/asset files..."
+  mkdir -p "$CONF_FILE_DESTINATION"
+
+  if [ -d "$REPO_ASSETS_DIR" ]; then
+    cp -r "$REPO_ASSETS_DIR/." "$CONF_FILE_DESTINATION"
+    print_success "Asset files copied from repo to $CONF_FILE_DESTINATION."
+  else
+    print_error "Assets directory not found: $REPO_ASSETS_DIR"
+  fi
+}
+
+copy_scripts_files() {
+  print_info "Copying SCRIPTS files..."
+  mkdir -p "$SCRIPTS_FILE_DESTINATION"
+
+  if [ -d "$REPO_SCRIPTS_DIR" ]; then
+    cp -r "$REPO_SCRIPTS_DIR/." "$SCRIPTS_FILE_DESTINATION"
+    chmod +x "$SCRIPTS_FILE_DESTINATION"/*.sh 2>/dev/null
+    print_success "SCRIPTS files copied from repo to $SCRIPTS_FILE_DESTINATION."
+  else
+    print_error "Scripts directory not found: $REPO_SCRIPTS_DIR"
+  fi
+}
+
+
+
+## Creating bash aliases link ##
+create_bash_aliases_link() {
+  print_info "Creating bash aliases link..."
+  # Só adiciona o bloco se ele ainda nao existir, evitando duplicatas a cada execucao
+  if ! grep -q "if \[ -f ~/.bash_aliases \]" ~/.bashrc; then
+    cat >> ~/.bashrc <<'EOF'
+
+if [ -f ~/.bash_aliases ]; then
+    . ~/.bash_aliases
+fi
+EOF
+  fi
+  print_success "Bash aliases link created successfully."
+}
+
+## Create templates ##
+create_templates() {
+  print_info "Creating files templates..."
+
+  for template in "${TEMPLATES[@]}"; do
+    touch "$TEMPLATE_DIRECTORY/$template"
+  done
+
+  print_success "Templates criados com sucesso em $TEMPLATE_DIRECTORY."
+}
+
+
+
+## Install repository packages ##
+install_apt_packages() {
+  print_info "Installing APT packages..."
+  sudo apt --fix-broken install -y
+
+  for package in "${APT_PACKAGES[@]}"; do
+    sudo apt install $package -y
+    print_success "Package $package installed successfully." || print_error "Error installing package $package"
+  done
+}
+
+
+## Install snapd ##
+install_snapd() {
+  print_info "Installing Snap package management tools..."
+  sudo apt-get update
+  sudo apt-get install snapd -y
+  print_success "Snap installed successfully."
+}
+
+
+## Install Flatpak packages ##
+install_flatpak() {
+  print_info "Installing Flatpak packages..."
+  sudo apt install flatpak -y
+  sudo flatpak remote-add --if-not-exists  flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+  sudo flatpak install flathub ${FLATPAK_PACKAGES[@]} -y
+  print_success "Flatpak packages installed successfully."
+
+  if ! command -v flatpak &> /dev/null; then
+    print_error "Flatpak not installed. Please check the installation."
+  fi
+}
+
+
+
+## Install Snap packages ## 
+install_snaps() {
+    for package in "${SNAP_PACKAGES[@]}"; do
+        if ! snap list "$package" >/dev/null 2>&1; then
+            print_success "Installing $package..."
+            sudo snap install "$package" --classic
+        else
+            print_info "$package is already installed."
+        fi
+    done
+}
+
+
+
+## Download external applications ##
+install_external_applications() {
+  print_info "Downloading external applications..."
+
+  mkdir -p "$APPLICATIONS_DIRECTORY"
+  cd "$APPLICATIONS_DIRECTORY"
+
+  wget -c "$EDGE_REPO" -P "$APPLICATIONS_DIRECTORY"
+  wget -c "$VSCODE_REPO" -P "$APPLICATIONS_DIRECTORY"
+  wget -c "$TELEGRAM_REPO" -P "$APPLICATIONS_DIRECTORY"
+  wget -c "$STEAM_REPO" -P "$APPLICATIONS_DIRECTORY"
+  # wget -c "$WPS_REPO" -P "$APPLICATIONS_DIRECTORY"   # WPS desativado
+
+  # Check if any .deb files are present before attempting installation
+  deb_files=("$APPLICATIONS_DIRECTORY"/*.deb)
+  if [ ${#deb_files[@]} -gt 0 ]; then
+    sudo dpkg -i --refuse-downgrade "${deb_files[@]}" || sudo apt --fix-broken install -y
+    print_success "External applications downloaded and installed successfully."
+  else
+    print_error "No .deb files found in $APPLICATIONS_DIRECTORY."
+  fi
+}
+
+
+## Install Wine ##
+install_wine() {
+  print_info "Installing wine..."
+  sudo wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/debian/dists/trixie/winehq-trixie.sources
+  sudo apt update
+  sudo apt install --install-recommends winehq-stable
+  print_success "Wine installed successfully."
+}
+
+
+## Install Docker ## 
+install_docker() {
+  print_info "Installing Docker..."
+  sudo apt-get update
+  sudo apt-get install -y apt-transport-https ca-certificates curl
+  curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+  echo \
+    "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian \
+    $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  sudo apt-get update
+  sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+  sudo groupadd -f docker
+  sudo usermod -aG docker $USER
+  
+  print_success "Docker installed successfully."
+}
+
+
+## Install PuTTY ##
+install_putty() {
+  print_info "Installing PuTTY..."
+  sudo apt-get install -y putty
+  if ! command -v putty &> /dev/null; then
+    print_error "PuTTY installation failed. Please check the installation."
+  else
+    print_success "PuTTY installed successfully."
+  fi
+}
+
+
+
+## Install Spotify ## (removido: nao uso mais)
+# install_spotify() {
+#   print_info "Installing Spotify..."
+#
+#   curl -sS https://download.spotify.com/debian/pubkey_6224F9941A8AA6D1.gpg | sudo gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/spotify.gpg
+#   echo "deb http://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list
+#
+#   sudo apt-get update && sudo apt-get install spotify-client
+#
+#   print_success "Spotify installed successfully."
+# }
+
+
+## Setup aliases in ~/.bashrc ##
+setup_aliases() {
+  echo "Setting up bash aliases"
+
+  # Se o bloco de aliases ja existir, remove antes de reescrever (idempotente)
+  if grep -q "# >>> victor aliases >>>" ~/.bashrc; then
+    sed -i '/# >>> victor aliases >>>/,/# <<< victor aliases <<</d' ~/.bashrc
+  fi
+
+  cat >> ~/.bashrc <<'EOF'
+# >>> victor aliases >>>
+alias ..="cd .."
+alias aliasconf="code ~/.bash_aliases"
+alias dir="dir --color=auto"
+alias dup="docker up"
+alias duprb="docker compose up -d --force-recreate --build"
+alias egrep="egrep --color=auto"
+alias fgrep="fgrep --color=auto"
+alias fh="history|grep"
+alias fp="apt list -i | grep"
+alias grep="grep --color=auto"
+alias ips="ip -c -br a"
+alias la="ls -la"
+alias ll="ls -l"
+alias ls="ls --color=auto"
+alias matrix="cmatrix"
+alias mkdir="mkdir -pv"
+alias ff="fastfetch"
+alias open="xdg-open ."
+alias ports="sudo netstat -tulanp"
+alias su="su -"
+alias upd="sudo apt update && sudo apt upgrade -y"
+alias atualizar="sudo apt update && sudo apt upgrade -y"
+# <<< victor aliases <<<
+EOF
+
+  echo "Bash aliases set up successfully."
+}
+
+
+
+## Setup Git credentials ##
+setup_gitcredentials() {
+  print_info "Setting up Git credentials..."
+  git config --global user.name "$GIT_NAME"
+  git config --global user.email "$GIT_EMAIL"
+  print_success "Git credentials configured successfully."
+}
+
+
+## Setup keyboard binds ##
+setup_keybinds() {
+  print_info "Setting up keybinds..."
+
+  if [ -f "$KEYBIND_CONFIG_FILE" ]; then
+    while IFS=' ' read -r schema path key value; do
+      # Verifica se a chave é uma lista
+      if [[ "$value" =~ ^\[.*\]$ ]]; then
+        # Remove os colchetes da lista e converte para array
+        value=$(echo "$value" | sed 's/^\[\(.*\)\]$/\1/' | tr ',' '\n')
+        value=($value)
+        # Configura cada valor da lista
+        for val in "${value[@]}"; do
+          gsettings set "$schema" "$key" "$val"
+        done
+      else
+        gsettings set "$schema" "$key" "$value"
+      fi
+    done < "$KEYBIND_CONFIG_FILE"
+
+    print_success "Keyboard binds configured successfully."
+  else
+    print_error "Error: Configuration file not found in: $KEYBIND_CONFIG_FILE"
+  fi
+}
+
+
+## Setup keyboard binds via dconf load (gerado do gist pessoal) ##
+setup_keybinds_dconf() {
+  print_info "Setting up keybinds via dconf..."
+
+  # Procura o keybinds.dconf: primeiro nos assets do repo, depois na pasta conf instalada
+  local kb_file=""
+  if [ -f "$REPO_ASSETS_DIR/keybinds.dconf" ]; then
+    kb_file="$REPO_ASSETS_DIR/keybinds.dconf"
+  elif [ -f "$CONF_FILE_DESTINATION/keybinds.dconf" ]; then
+    kb_file="$CONF_FILE_DESTINATION/keybinds.dconf"
+  fi
+
+  if [ -n "$kb_file" ]; then
+    dconf load / < "$kb_file"
+    # Marca que este sistema ja recebeu as binds do repo. O backup agendado
+    # so pode exportar/commitar depois que esta sentinela existir, evitando
+    # que uma maquina recem-instalada sobrescreva o repo com um estado vazio.
+    mkdir -p "$HOME/.config/debian-scripts"
+    date '+%Y-%m-%dT%H:%M:%S%z' > "$HOME/.config/debian-scripts/.initialized"
+    print_success "Keyboard binds (dconf) configured from: $kb_file"
+  else
+    print_error "Error: keybinds.dconf not found in $REPO_ASSETS_DIR nor $CONF_FILE_DESTINATION"
+  fi
+}
+
+
+## Install GNOME extensions from the saved list (downloaded from extensions.gnome.org) ##
+install_gnome_extensions() {
+  print_info "Installing GNOME extensions..."
+
+  local ext_list="$REPO_ASSETS_DIR/gnome-extensions.list"
+  local ext_settings="$REPO_ASSETS_DIR/gnome-extensions-settings.dconf"
+
+  if [ ! -f "$ext_list" ]; then
+    print_error "Extension list not found: $ext_list"
+    return
+  fi
+
+  if ! command -v gnome-extensions &> /dev/null; then
+    print_error "gnome-extensions CLI not found. Install 'gnome-shell-extensions' first."
+    return
+  fi
+
+  # Versao do GNOME Shell para pedir o zip compativel na API da EGO
+  local shell_ver
+  shell_ver="$(gnome-shell --version 2>/dev/null | grep -oE '[0-9]+' | head -1)"
+  print_info "GNOME Shell version detected: ${shell_ver:-desconhecida}"
+
+  local tmpdir
+  tmpdir="$(mktemp -d)"
+
+  while IFS= read -r uuid; do
+    [ -z "$uuid" ] && continue
+    case "$uuid" in \#*) continue ;; esac   # ignora comentarios
+
+    if gnome-extensions list 2>/dev/null | grep -qx "$uuid"; then
+      print_info "$uuid already installed, skipping."
+      continue
+    fi
+
+    print_info "Downloading $uuid from extensions.gnome.org..."
+    # Descobre a URL de download compativel via API de info da EGO
+    local info_url="https://extensions.gnome.org/extension-info/?uuid=${uuid}&shell_version=${shell_ver}"
+    local dl_path
+    dl_path="$(curl -sf "$info_url" | grep -oE '"download_url": *"[^"]+"' | sed 's/.*"download_url": *"//; s/"//')"
+
+    if [ -z "$dl_path" ]; then
+      print_error "No compatible download found for $uuid (shell $shell_ver). Install manually."
+      continue
+    fi
+
+    local zip="$tmpdir/${uuid}.zip"
+    if curl -sfL "https://extensions.gnome.org${dl_path}" -o "$zip"; then
+      if gnome-extensions install --force "$zip"; then
+        gnome-extensions enable "$uuid" 2>/dev/null
+        print_success "Installed and enabled $uuid."
+      else
+        print_error "Failed to install $uuid from $zip."
+      fi
+    else
+      print_error "Download failed for $uuid."
+    fi
+  done < "$ext_list"
+
+  # Restaura as configuracoes das extensoes, se existirem
+  if [ -f "$ext_settings" ]; then
+    dconf load /org/gnome/shell/extensions/ < "$ext_settings"
+    print_success "Extension settings restored."
+  fi
+
+  rm -rf "$tmpdir"
+  print_info "GNOME extensions step finished. A logout/login may be required to activate them."
+}
+
+
+## Instala um agendamento (cron) que roda o backup do GNOME periodicamente ##
+## Se detectar mudanca em binds/extensoes, ele commita e da push automaticamente. ##
+setup_backup_cron() {
+  print_info "Setting up backup cron job..."
+
+  local backup_script="$SCRIPTS_FILE_DESTINATION/Backup_gnome_config.sh"
+  local schedule="0 */6 * * *"   # a cada 6 horas; ajuste se quiser
+  local log_file="$HOME/.config/debian-scripts/backup.log"
+
+  if [ ! -f "$backup_script" ]; then
+    print_error "Backup script not found at $backup_script (rode copy_scripts_files antes)."
+    return
+  fi
+  chmod +x "$backup_script"
+  mkdir -p "$(dirname "$log_file")"
+
+  # Linha do cron. --push para publicar automaticamente quando houver mudanca.
+  # Passamos as variaveis de ambiente necessarias para o dconf funcionar via cron.
+  local cron_line="$schedule DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u)/bus $backup_script --push >> $log_file 2>&1"
+
+  # Idempotente: remove qualquer entrada antiga do mesmo script antes de re-adicionar
+  local current
+  current="$(crontab -l 2>/dev/null | grep -v "Backup_gnome_config.sh")"
+  { [ -n "$current" ] && echo "$current"; echo "$cron_line"; } | crontab -
+
+  print_success "Cron job installed ($schedule). Log: $log_file"
+  print_info "Verifique com: crontab -l"
+}
+
+
+## Setup DCONF settings ##
+dconf_setup() {
+  print_info "Setting up DCONF..."
+  local dconf_file="$REPO_ASSETS_DIR/dconf-general-settings.ini"
+  if [ -f "$dconf_file" ]; then
+    dconf load / < "$dconf_file"
+    print_success "DCONF settings configured successfully."
+  else
+    print_info "dconf-general-settings.ini not found in assets, skipping."
+  fi
+}
+
+## Setup GNOME minimize button in windows ##
+setup_gnomesettings() {
+  print_info "Setting up minimize button in GNOME interface..."
+  gsettings set org.gnome.desktop.wm.preferences button-layout ":minimize,close"
+  print_success "GNOME minimize button set up successfully."
+}
+
+
+## Function to finish setup ##
+finish_setup() {
+  print_info "Finishing setup..."
+
+  sudo apt update && sudo apt dist-upgrade -y
+  flatpak update -y
+  sudo apt autoclean
+  sudo apt autoremove -y
+  print_success "Setup finished successfully."
+
+  read -p "The setup is complete. Do you want to reboot the system now? (y/n): " choice
+  case "$choice" in 
+    y|Y ) 
+      print_success "Rebooting system..."
+      sudo reboot
+      ;;
+    n|N ) 
+      print_info "Not rebooting. Your system will not be affected until the next restart."
+      ;;
+    * ) 
+      print_info "Invalid choice. The system will not be rebooted."
+      ;;
+  esac
+}
+
+
+# Starting functions
+# Ordem importa: preparar sistema -> pastas/copias -> instalar pacotes -> configs.
+# As configs de GNOME (binds/extensoes/cron) rodam por ultimo pois dependem dos
+# arquivos ja copiados por copy_scripts_files / copy_config_files.
+
+## --- Preparacao do sistema --- ##
+# verify_root                 # so avisa se nao for root; opcional
+# sudo_user                   # adicione ao sudoers manualmente (voce pediu)
+# remove_apt_locks            # use so se o apt travar
+update_system
+
+## --- Remocoes / limpeza --- ##
+remove_games
+# remove_libreoffice          # desativado (voce pode reativar se quiser)
+
+## --- Pastas e copia dos arquivos do repo --- ##
+create_templates
+create_folders
+copy_config_files             # assets/ -> ~/debian/conf
+copy_scripts_files            # scripts/ -> ~/debian/scripts
+
+## --- Ambiente de shell --- ##
+create_bash_aliases_link
+setup_aliases
+setup_gitcredentials
+
+## --- Instalacao de pacotes e apps --- ##
+install_apt_packages
+install_external_applications
+install_putty
+install_flatpak
+install_snapd
+install_snaps
+install_docker
+install_wine
+# install_spotify             # removido: nao uso mais
+
+## --- Configuracoes do GNOME (dependem dos arquivos ja copiados) --- ##
+# setup_keybinds              # antigo (formato .conf); substituido por setup_keybinds_dconf
+setup_keybinds_dconf          # carrega assets/keybinds.dconf E cria a sentinela de init
+install_gnome_extensions      # baixa extensoes da EGO + restaura configs
+dconf_setup                   # aplica dconf-general-settings.ini (se existir em assets)
+setup_gnomesettings           # botao minimizar
+setup_backup_cron             # agenda backup periodico (commit+push se houver mudanca)
+
+## --- Finalizacao --- ##
+finish_setup
+
