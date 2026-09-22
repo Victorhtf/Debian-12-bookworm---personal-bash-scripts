@@ -21,7 +21,7 @@ SCRIPTS_DIR="$DEBIAN_DIR/scripts"
 CONF_DIR="$DEBIAN_DIR/conf"
 DUMP_DIR="$DEBIAN_DIR/dump"
 BACKUP_DIR="$HOME_DIR/Backups"
-WALLPAPER_DIR="$HOME_DIR/Pictures/Wallpapers"
+WALLPAPER_DIR="$HOME_DIR/pictures/wallpapers"
 DOWNLOADS_DIR="$HOME_DIR/Downloads"
 
 ## Estado interno (sentinela de inicializacao, logs) ##

@@ -39,7 +39,7 @@ DIRECTORIES=(
   "$DEBIAN_DIRECTORY/conf"
   "$DEBIAN_DIRECTORY/scripts"
   "$DEBIAN_DIRECTORY/dump"
-  "$HOME/Pictures/Wallpapers"
+  "$HOME/pictures/wallpapers"
 )
 
 ## Template files to insert in template folder ##
