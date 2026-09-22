@@ -51,6 +51,7 @@ indicator-position-max=1
 
 [clipboard-indicator]
 history-size=100
+keep-selected-on-clear=true
 move-item-first=true
 open-at-cursor=true
 paste-on-select=true
