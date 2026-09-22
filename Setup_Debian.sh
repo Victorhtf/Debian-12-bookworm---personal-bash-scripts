@@ -577,6 +577,43 @@ setup_keybinds_dconf() {
 }
 
 
+## Setup GNOME Terminal profiles via dconf load (perfil, cores, fonte, binds) ##
+setup_terminal_dconf() {
+  print_info "Setting up GNOME Terminal profiles via dconf..."
+
+  local term_file=""
+  if [ -f "$REPO_ASSETS_DIR/terminal.dconf" ]; then
+    term_file="$REPO_ASSETS_DIR/terminal.dconf"
+  elif [ -f "$CONF_FILE_DESTINATION/terminal.dconf" ]; then
+    term_file="$CONF_FILE_DESTINATION/terminal.dconf"
+  fi
+
+  if [ -n "$term_file" ]; then
+    dconf load / < "$term_file"
+    print_success "GNOME Terminal profiles restored from: $term_file"
+  else
+    print_info "terminal.dconf not found in $REPO_ASSETS_DIR; skipping terminal restore."
+  fi
+}
+
+
+## Restaura os agendamentos (crontab) versionados em assets/crontab ##
+## O arquivo usa o placeholder __HOME__ para portabilidade entre usuarios. ##
+setup_cron_from_repo() {
+  print_info "Restoring user crontab from repo..."
+
+  local cron_file="$REPO_ASSETS_DIR/crontab"
+  if [ ! -f "$cron_file" ]; then
+    print_info "assets/crontab not found; skipping crontab restore."
+    return
+  fi
+
+  # Substitui __HOME__ pelo HOME real e instala o crontab do usuario
+  sed "s#__HOME__#${HOME}#g" "$cron_file" | crontab -
+  print_success "Crontab restored from: $cron_file (verifique com: crontab -l)"
+}
+
+
 ## Install GNOME extensions from the saved list (downloaded from extensions.gnome.org) ##
 install_gnome_extensions() {
   print_info "Installing GNOME extensions..."
@@ -587,7 +624,7 @@ install_gnome_extensions() {
   if [ ! -f "$ext_list" ]; then
     print_info "Lista de extensoes ainda nao existe ($ext_list)."
     print_info "Isso e normal na primeira instalacao. Depois de habilitar suas extensoes,"
-    print_info "rode 'Backup_gnome_config.sh' para gerar a lista e versiona-la no repo."
+    print_info "rode 'Backup.sh' para gerar a lista e versiona-la no repo."
     return
   fi
 
@@ -653,7 +690,7 @@ install_gnome_extensions() {
 setup_backup_cron() {
   print_info "Setting up backup cron job..."
 
-  local backup_script="$SCRIPTS_FILE_DESTINATION/Backup_gnome_config.sh"
+  local backup_script="$SCRIPTS_FILE_DESTINATION/Backup.sh"
   local schedule="0 */6 * * *"   # a cada 6 horas; ajuste se quiser
   local log_file="$HOME/.config/debian-scripts/backup.log"
 
@@ -668,9 +705,9 @@ setup_backup_cron() {
   # Passamos as variaveis de ambiente necessarias para o dconf funcionar via cron.
   local cron_line="$schedule DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u)/bus $backup_script --push >> $log_file 2>&1"
 
-  # Idempotente: remove qualquer entrada antiga do mesmo script antes de re-adicionar
+  # Idempotente: remove entradas antigas do backup (nome novo e antigo) antes de re-adicionar
   local current
-  current="$(crontab -l 2>/dev/null | grep -v "Backup_gnome_config.sh")"
+  current="$(crontab -l 2>/dev/null | grep -vE "Backup\.sh|Backup_gnome_config\.sh")"
   { [ -n "$current" ] && echo "$current"; echo "$cron_line"; } | crontab -
 
   print_success "Cron job installed ($schedule). Log: $log_file"
@@ -767,15 +804,15 @@ menu_backups() {
   while true; do
     clear
     echo "===== BACKUPS ====="
-    echo " 1) Agendar backup automatico (cron: exporta binds/extensoes e commita se mudar)"
-    echo " 2) Rodar backup de configs GNOME agora (binds + extensoes -> git)"
+    echo " 1) Agendar backup automatico (cron: exporta binds/extensoes/terminal/cron e commita se mudar)"
+    echo " 2) Rodar backup de configs agora (binds + extensoes + terminal + cron -> git)"
     echo " 3) Rodar backup de arquivos agora (~/debian + wallpapers -> ~/Backups)"
     echo " 0) Voltar"
     read -rp "> " o
     case "$o" in
       1) setup_backup_cron; pause ;;
-      2) "$SCRIPTS_FILE_DESTINATION/Backup_gnome_config.sh" --push 2>/dev/null \
-           || bash "$REPO_SCRIPTS_DIR/Backup_gnome_config.sh" --push; pause ;;
+      2) "$SCRIPTS_FILE_DESTINATION/Backup.sh" --push 2>/dev/null \
+           || bash "$REPO_SCRIPTS_DIR/Backup.sh" --push; pause ;;
       3) "$SCRIPTS_FILE_DESTINATION/Backup_files.sh" 2>/dev/null \
            || bash "$REPO_SCRIPTS_DIR/Backup_files.sh"; pause ;;
       0) return ;;
@@ -796,7 +833,8 @@ menu_configs() {
     echo " 5) Aliases de shell (~/.bashrc)"
     echo " 6) Link do ~/.bash_aliases"
     echo " 7) Credenciais do Git"
-    echo " 8) TODAS as configs (1..7)"
+    echo " 8) TODAS as configs (1..7 + terminal + cron)"
+    echo " 9) Restaurar perfil do GNOME Terminal (dconf)"
     echo " 0) Voltar"
     read -rp "> " o
     case "$o" in
@@ -807,8 +845,10 @@ menu_configs() {
       5) setup_aliases; pause ;;
       6) create_bash_aliases_link; pause ;;
       7) setup_gitcredentials; pause ;;
-      8) setup_keybinds_dconf; install_gnome_extensions; dconf_setup; \
-         setup_gnomesettings; setup_aliases; create_bash_aliases_link; setup_gitcredentials; pause ;;
+      8) setup_keybinds_dconf; setup_terminal_dconf; install_gnome_extensions; dconf_setup; \
+         setup_gnomesettings; setup_aliases; create_bash_aliases_link; setup_gitcredentials; \
+         setup_cron_from_repo; pause ;;
+      9) setup_terminal_dconf; pause ;;
       0) return ;;
       *) echo "Opcao invalida"; sleep 1 ;;
     esac
@@ -902,9 +942,11 @@ run_full_install() {
   install_docker
   install_wine
   setup_keybinds_dconf
+  setup_terminal_dconf
   install_gnome_extensions
   dconf_setup
   setup_gnomesettings
+  setup_cron_from_repo
   setup_backup_cron
   finish_setup
 }

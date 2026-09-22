@@ -2,8 +2,8 @@
 #
 # Backup_files.sh - arquivamento local de arquivos (nao versionado).
 # Copia a pasta ~/debian e os wallpapers para ~/Backups/<timestamp>/.
-# O backup das configuracoes do GNOME (binds/extensoes) e feito por
-# Backup_gnome_config.sh (versionado no git) - aqui NAO ha duplicacao.
+# O backup das configuracoes versionadas (binds/extensoes/terminal/cron) e feito
+# por Backup.sh (versionado no git) - aqui NAO ha duplicacao.
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config.sh"
 

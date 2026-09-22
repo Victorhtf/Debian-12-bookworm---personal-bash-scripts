@@ -2,8 +2,8 @@
 #
 # Daily_Debian.sh - orquestrador de tarefas diarias.
 # Organiza os downloads, faz backup local de arquivos e notifica.
-# O backup versionado das configs do GNOME e feito pelo cron via
-# Backup_gnome_config.sh (independente deste script).
+# O backup versionado das configs (GNOME/terminal/cron) e feito pelo cron via
+# Backup.sh (independente deste script).
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/config.sh"
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/Backup_files.sh"
