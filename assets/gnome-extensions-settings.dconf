@@ -76,6 +76,10 @@ show-trash=false
 auto-close=false
 follow-cursor=false
 
+[just-perfection]
+panel-in-overview=true
+support-notifier-type=0
+
 [lockkeys]
 capslock-indicator='never'
 capslock-notification='osd'

@@ -622,6 +622,25 @@ setup_general_dconf() {
 }
 
 
+## Restaura o ~/.bashrc versionado (faz backup do atual antes, por seguranca) ##
+setup_bashrc_from_repo() {
+  print_info "Restoring ~/.bashrc from repo..."
+
+  local src="$REPO_ASSETS_DIR/bashrc"
+  if [ ! -f "$src" ]; then
+    print_info "assets/bashrc not found; skipping bashrc restore."
+    return
+  fi
+
+  # Backup do bashrc atual com timestamp, para nao perder nada
+  if [ -f "$HOME/.bashrc" ]; then
+    cp "$HOME/.bashrc" "$HOME/.bashrc.bak.$(date '+%Y%m%d-%H%M%S')"
+  fi
+  cp "$src" "$HOME/.bashrc"
+  print_success "~/.bashrc restored from: $src (backup do anterior salvo em ~/.bashrc.bak.*)"
+}
+
+
 ## Restaura os agendamentos (crontab) versionados em assets/crontab ##
 ## O arquivo usa o placeholder __HOME__ para portabilidade entre usuarios. ##
 setup_cron_from_repo() {
@@ -861,6 +880,7 @@ menu_configs() {
     echo " 8) TODAS as configs (1..7 + terminal + cron)"
     echo " 9) Restaurar perfil do GNOME Terminal (dconf)"
     echo "10) Restaurar configs gerais do GNOME (aparencia, mouse, wallpaper...)"
+    echo "11) Restaurar ~/.bashrc do repo (backup do atual e feito antes)"
     echo " 0) Voltar"
     read -rp "> " o
     case "$o" in
@@ -876,6 +896,7 @@ menu_configs() {
          setup_cron_from_repo; pause ;;
       9) setup_terminal_dconf; pause ;;
       10) setup_general_dconf; pause ;;
+      11) setup_bashrc_from_repo; pause ;;
       0) return ;;
       *) echo "Opcao invalida"; sleep 1 ;;
     esac

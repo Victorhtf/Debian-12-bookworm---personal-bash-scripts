@@ -40,10 +40,12 @@ mkdir -p "$ASSETS_DIR"
 
 KEYBINDS_FILE="$ASSETS_DIR/keybinds.dconf"
 EXT_LIST_FILE="$ASSETS_DIR/gnome-extensions.list"
+EXT_ENABLED_FILE="$ASSETS_DIR/gnome-extensions-enabled.list"
 EXT_SETTINGS_FILE="$ASSETS_DIR/gnome-extensions-settings.dconf"
 TERMINAL_FILE="$ASSETS_DIR/terminal.dconf"
 CRON_FILE="$ASSETS_DIR/crontab"
 GENERAL_FILE="$ASSETS_DIR/gnome-general.dconf"
+BASHRC_FILE="$ASSETS_DIR/bashrc"
 
 ## Flags ##
 DO_COMMIT=1
@@ -101,8 +103,12 @@ export_keybinds() {
 export_extensions_list() {
   info "Exporting GNOME extensions list..."
   if command -v gnome-extensions &> /dev/null; then
-    gnome-extensions list --enabled 2>/dev/null | sort > "$EXT_LIST_FILE"
-    ok "Extensions list -> $EXT_LIST_FILE ($(wc -l < "$EXT_LIST_FILE") extensions)"
+    # Lista TODAS as instaladas (para o setup reinstalar) e as habilitadas
+    # (para reativar exatamente o mesmo conjunto). Assim add/remove/enable/disable
+    # sao todos versionados.
+    gnome-extensions list 2>/dev/null | sort > "$EXT_LIST_FILE"
+    gnome-extensions list --enabled 2>/dev/null | sort > "$EXT_ENABLED_FILE"
+    ok "Extensions list -> $EXT_LIST_FILE ($(wc -l < "$EXT_LIST_FILE") instaladas, $(wc -l < "$EXT_ENABLED_FILE") habilitadas)"
   else
     err "gnome-extensions CLI not found; skipping extension list."
   fi
@@ -170,7 +176,18 @@ export_general() {
   [ -s "$GENERAL_FILE" ] && ok "General settings -> $GENERAL_FILE" || { rm -f "$GENERAL_FILE"; info "No general settings to export."; }
 }
 
-## 7. Commit se houver diferenca (qualquer arquivo em assets/) ##
+## 7. ~/.bashrc do usuario ##
+export_bashrc() {
+  info "Exporting ~/.bashrc..."
+  if [ -f "$HOME_DIR/.bashrc" ]; then
+    cp "$HOME_DIR/.bashrc" "$BASHRC_FILE"
+    ok "bashrc -> $BASHRC_FILE"
+  else
+    info "~/.bashrc not found; skipping."
+  fi
+}
+
+## 8. Commit se houver diferenca (qualquer arquivo em assets/) ##
 commit_if_changed() {
   [ "$DO_COMMIT" -eq 0 ] && { info "--no-commit set, skipping git."; return; }
   cd "$REPO_ROOT" || { err "Cannot cd to repo root."; return; }
@@ -204,5 +221,6 @@ export_extensions_settings
 export_terminal
 export_cron
 export_general
+export_bashrc
 commit_if_changed
 ok "Backup finished."
