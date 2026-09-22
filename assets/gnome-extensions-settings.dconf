@@ -50,7 +50,9 @@ cli-toggle=false
 indicator-position-max=1
 
 [clipboard-indicator]
+history-size=100
 open-at-cursor=false
+strip-text=false
 
 [dash-to-dock]
 background-opacity=0.80000000000000004
