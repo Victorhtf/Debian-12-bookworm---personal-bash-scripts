@@ -51,8 +51,11 @@ indicator-position-max=1
 
 [clipboard-indicator]
 history-size=100
-open-at-cursor=false
-strip-text=false
+move-item-first=true
+open-at-cursor=true
+paste-on-select=true
+strip-text=true
+toggle-menu=['<Super>v']
 
 [dash-to-dock]
 background-opacity=0.80000000000000004
