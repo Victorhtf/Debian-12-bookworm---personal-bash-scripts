@@ -146,6 +146,7 @@ FLATPAK_PACKAGES=(
   io.dbeaver.DBeaverCommunity
   com.rafaelmardojai.Blanket
   com.github.tchx84.Flatseal
+  be.alexandervanhee.gradia
 )
 
 SNAP_PACKAGES=(

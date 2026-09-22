@@ -8,6 +8,7 @@ restore-shortcuts=['']
 [org/gnome/shell/keybindings]
 focus-active-notification=@as []
 open-application-menu=@as []
+show-screenshot-ui=@as []
 switch-to-application-1=['']
 switch-to-application-2=['']
 switch-to-application-3=['']
@@ -66,7 +67,7 @@ toggle-maximized=@as []
 unmaximize=@as []
 
 [org/gnome/settings-daemon/plugins/media-keys]
-custom-keybindings=['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/']
+custom-keybindings=['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/']
 next=['F5']
 pause=@as []
 play=['F4']
@@ -76,6 +77,11 @@ previous=['F3']
 binding='<Alt>q'
 command='gnome-terminal'
 name='Launch Terminal'
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1]
+binding='Print'
+command='flatpak run be.alexandervanhee.gradia --screenshot'
+name='Gradia Screenshot'
 
 [org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5]
 binding='<Control>space'
