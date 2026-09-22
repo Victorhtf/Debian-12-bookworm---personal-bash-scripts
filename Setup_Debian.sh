@@ -363,7 +363,21 @@ install_flatpak() {
   print_info "Installing Flatpak packages..."
   sudo apt install flatpak -y
   sudo flatpak remote-add --if-not-exists  flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-  sudo flatpak install flathub ${FLATPAK_PACKAGES[@]} -y
+
+  # Prefere a lista gerada pelo Backup.sh (assets/flatpak.list), que reflete o
+  # que esta realmente instalado. Se nao existir, usa o array embutido (fallback).
+  local flatpak_list="$REPO_ASSETS_DIR/flatpak.list"
+  if [ -f "$flatpak_list" ]; then
+    print_info "Usando lista gerada: $flatpak_list"
+    # Ignora linhas vazias e comentarios
+    mapfile -t _fp < <(grep -vE '^\s*(#|$)' "$flatpak_list")
+    if [ "${#_fp[@]}" -gt 0 ]; then
+      sudo flatpak install flathub "${_fp[@]}" -y
+    fi
+  else
+    print_info "Lista gerada nao encontrada; usando FLATPAK_PACKAGES embutido."
+    sudo flatpak install flathub "${FLATPAK_PACKAGES[@]}" -y
+  fi
   print_success "Flatpak packages installed successfully."
 
   if ! command -v flatpak &> /dev/null; then

@@ -102,9 +102,12 @@ auto-close=false
 follow-cursor=false
 
 [just-perfection]
+accessibility-menu=false
 activities-button=true
 clock-menu=true
 panel-in-overview=true
+quick-settings=true
+quick-settings-backlight=true
 support-notifier-type=0
 
 [libpanel]
@@ -131,10 +134,13 @@ remove-output-volume-slider=false
 version=2
 
 [quick-settings-tweaks]
+dnd-quick-toggle-indicator-position='date-menu'
 media-compact=true
 media-contorl-show-pause-button=true
 notifications-compact=true
-notifications-enabled=false
+notifications-enabled=true
+notifications-use-native-controls=true
+toggles-layout-enabled=false
 volume-mixer-enabled=false
 weather-enabled=false
 

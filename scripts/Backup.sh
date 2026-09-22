@@ -56,6 +56,7 @@ TERMINAL_FILE="$ASSETS_DIR/terminal.dconf"
 CRON_FILE="$ASSETS_DIR/crontab"
 GENERAL_FILE="$ASSETS_DIR/gnome-general.dconf"
 BASHRC_FILE="$ASSETS_DIR/bashrc"
+FLATPAK_LIST_FILE="$ASSETS_DIR/flatpak.list"
 
 ## Flags ##
 DO_COMMIT=1
@@ -197,7 +198,24 @@ export_bashrc() {
   fi
 }
 
-## 8. Commit se houver diferenca (qualquer arquivo em assets/) ##
+## 8. Lista de flatpaks instalados (apps) ##
+export_flatpaks() {
+  info "Exporting installed Flatpak apps..."
+  if command -v flatpak &> /dev/null; then
+    # So os apps (nao runtimes), por application-id, ordenados
+    flatpak list --app --columns=application 2>/dev/null | sort > "$FLATPAK_LIST_FILE"
+    if [ -s "$FLATPAK_LIST_FILE" ]; then
+      ok "Flatpak list -> $FLATPAK_LIST_FILE ($(wc -l < "$FLATPAK_LIST_FILE") apps)"
+    else
+      rm -f "$FLATPAK_LIST_FILE"
+      info "No flatpak apps found."
+    fi
+  else
+    info "flatpak CLI not found; skipping."
+  fi
+}
+
+## 9. Commit se houver diferenca (qualquer arquivo em assets/) ##
 commit_if_changed() {
   [ "$DO_COMMIT" -eq 0 ] && { info "--no-commit set, skipping git."; return; }
   cd "$REPO_ROOT" || { err "Cannot cd to repo root."; return; }
@@ -232,5 +250,6 @@ export_terminal
 export_cron
 export_general
 export_bashrc
+export_flatpaks
 commit_if_changed
 ok "Backup finished."
