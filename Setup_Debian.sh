@@ -149,6 +149,7 @@ FLATPAK_PACKAGES=(
   com.rafaelmardojai.Blanket
   com.github.tchx84.Flatseal
   be.alexandervanhee.gradia
+  com.discordapp.Discord
 )
 
 SNAP_PACKAGES=(
