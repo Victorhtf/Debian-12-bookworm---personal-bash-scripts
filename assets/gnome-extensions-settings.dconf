@@ -50,7 +50,7 @@ cli-toggle=false
 indicator-position-max=1
 
 [clipboard-indicator]
-history-size=100
+history-size=300
 keep-selected-on-clear=true
 move-item-first=true
 open-at-cursor=true
