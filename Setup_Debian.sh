@@ -20,7 +20,9 @@ USER_HOME="${USER_HOME:-$HOME}"
 DOWNLOAD_DIRECTORY="$USER_HOME/Downloads"
 APPLICATIONS_DIRECTORY="$DOWNLOAD_DIRECTORY/applications"
 BACKUP_DIRECTORY="$USER_HOME/Backups"
-DEBIAN_DIRECTORY="$USER_HOME/debian"
+# Raiz do repositorio (onde este Setup_Debian.sh esta), derivada automaticamente.
+# Assim nao ha hardcode de nome de pasta (funciona com debian-scripts, etc.).
+DEBIAN_DIRECTORY="$SCRIPT_DIR"
 TEMPLATE_DIRECTORY="$USER_HOME/Templates"
 
 ## Origem: pastas dentro do proprio repositorio clonado ##

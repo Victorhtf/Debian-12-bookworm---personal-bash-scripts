@@ -10,8 +10,13 @@
 USERNAME="${USER:-$(id -un)}"
 HOME_DIR="${HOME:-/home/$USERNAME}"
 
-## Diretorios principais (pasta debian minuscula) ##
-DEBIAN_DIR="$HOME_DIR/debian"
+## Diretorios principais ##
+# DEBIAN_DIR e derivado automaticamente da localizacao real do repositorio,
+# entao funciona seja qual for o nome da pasta (debian-scripts, etc.).
+# config.sh vive em <repo>/scripts/, logo o repo e o diretorio pai.
+_CONFIG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DEBIAN_DIR="$(cd "$_CONFIG_DIR" && git rev-parse --show-toplevel 2>/dev/null)"
+[ -z "$DEBIAN_DIR" ] && DEBIAN_DIR="$(cd "$_CONFIG_DIR/.." && pwd)"
 SCRIPTS_DIR="$DEBIAN_DIR/scripts"
 CONF_DIR="$DEBIAN_DIR/conf"
 DUMP_DIR="$DEBIAN_DIR/dump"

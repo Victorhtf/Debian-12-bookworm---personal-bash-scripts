@@ -85,6 +85,6 @@ name='Gradia Screenshot'
 
 [org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5]
 binding='<Control>space'
-command='/home/victorhtf/debian/scripts/Autowallpaper.sh'
+command='/home/victorhtf/debian-scripts/scripts/Autowallpaper.sh'
 name='Sort wallpaper'
 
