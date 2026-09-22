@@ -505,8 +505,10 @@ alias grep="grep --color=auto"
 alias tp="trash-put"
 # zoxide: 'cd' inteligente (use 'z <pasta>')
 eval "$(zoxide init bash)"
-# fzf: atalhos (Ctrl-R historico, Ctrl-T arquivos)
-[ -f /usr/share/doc/fzf/examples/key-bindings.bash ] && source /usr/share/doc/fzf/examples/key-bindings.bash
+# fzf: atalhos (Ctrl-R historico, Ctrl-T arquivos) + completion.
+# Metodo novo (fzf >= 0.48): gerencia o PROMPT_COMMAND corretamente e evita
+# o vazamento de CPR (^[[..R) que ocorria com o source antigo do key-bindings.
+command -v fzf >/dev/null && eval "$(fzf --bash)"
 # <<< victor aliases <<<
 EOF
 
