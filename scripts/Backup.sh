@@ -43,6 +43,7 @@ EXT_LIST_FILE="$ASSETS_DIR/gnome-extensions.list"
 EXT_SETTINGS_FILE="$ASSETS_DIR/gnome-extensions-settings.dconf"
 TERMINAL_FILE="$ASSETS_DIR/terminal.dconf"
 CRON_FILE="$ASSETS_DIR/crontab"
+GENERAL_FILE="$ASSETS_DIR/gnome-general.dconf"
 
 ## Flags ##
 DO_COMMIT=1
@@ -146,7 +147,30 @@ export_cron() {
   ok "Crontab -> $CRON_FILE"
 }
 
-## 6. Commit se houver diferenca (qualquer arquivo em assets/) ##
+## 6. Configuracoes gerais do GNOME (aparencia, mouse/touchpad, wallpaper, etc.) ##
+# Exporta ramos do dconf que nao sao keybinds nem extensoes, com cabecalhos
+# absolutos para permitir 'dconf load /'.
+export_general() {
+  info "Exporting general GNOME settings..."
+  local paths=(
+    "/org/gnome/desktop/interface/"
+    "/org/gnome/desktop/wm/preferences/"
+    "/org/gnome/desktop/peripherals/"
+    "/org/gnome/desktop/background/"
+    "/org/gnome/desktop/screensaver/"
+    "/org/gnome/desktop/input-sources/"
+    "/org/gnome/mutter/"
+  )
+  : > "$GENERAL_FILE"
+  local p
+  for p in "${paths[@]}"; do
+    dump_absolute "$p" >> "$GENERAL_FILE" && echo >> "$GENERAL_FILE"
+  done
+  # Remove arquivo se ficou vazio
+  [ -s "$GENERAL_FILE" ] && ok "General settings -> $GENERAL_FILE" || { rm -f "$GENERAL_FILE"; info "No general settings to export."; }
+}
+
+## 7. Commit se houver diferenca (qualquer arquivo em assets/) ##
 commit_if_changed() {
   [ "$DO_COMMIT" -eq 0 ] && { info "--no-commit set, skipping git."; return; }
   cd "$REPO_ROOT" || { err "Cannot cd to repo root."; return; }
@@ -160,7 +184,7 @@ commit_if_changed() {
 
   info "Changes detected. Committing..."
   local stamp; stamp="$(date '+%Y-%m-%d %H:%M')"
-  git commit -m "backup: update GNOME keybinds/extensions/terminal/cron - $stamp" \
+  git commit -m "backup: update GNOME keybinds/extensions/terminal/cron/general - $stamp" \
     -- "$ASSETS_DIR"
   ok "Committed changes."
 
@@ -179,5 +203,6 @@ export_extensions_list
 export_extensions_settings
 export_terminal
 export_cron
+export_general
 commit_if_changed
 ok "Backup finished."

@@ -602,6 +602,26 @@ setup_terminal_dconf() {
 }
 
 
+## Restaura configuracoes gerais do GNOME (aparencia, mouse, wallpaper, etc.) ##
+setup_general_dconf() {
+  print_info "Setting up general GNOME settings via dconf..."
+
+  local gen_file=""
+  if [ -f "$REPO_ASSETS_DIR/gnome-general.dconf" ]; then
+    gen_file="$REPO_ASSETS_DIR/gnome-general.dconf"
+  elif [ -f "$CONF_FILE_DESTINATION/gnome-general.dconf" ]; then
+    gen_file="$CONF_FILE_DESTINATION/gnome-general.dconf"
+  fi
+
+  if [ -n "$gen_file" ]; then
+    dconf load / < "$gen_file"
+    print_success "General GNOME settings restored from: $gen_file"
+  else
+    print_info "gnome-general.dconf not found in $REPO_ASSETS_DIR; skipping general restore."
+  fi
+}
+
+
 ## Restaura os agendamentos (crontab) versionados em assets/crontab ##
 ## O arquivo usa o placeholder __HOME__ para portabilidade entre usuarios. ##
 setup_cron_from_repo() {
@@ -840,6 +860,7 @@ menu_configs() {
     echo " 7) Credenciais do Git"
     echo " 8) TODAS as configs (1..7 + terminal + cron)"
     echo " 9) Restaurar perfil do GNOME Terminal (dconf)"
+    echo "10) Restaurar configs gerais do GNOME (aparencia, mouse, wallpaper...)"
     echo " 0) Voltar"
     read -rp "> " o
     case "$o" in
@@ -850,10 +871,11 @@ menu_configs() {
       5) setup_aliases; pause ;;
       6) create_bash_aliases_link; pause ;;
       7) setup_gitcredentials; pause ;;
-      8) setup_keybinds_dconf; setup_terminal_dconf; install_gnome_extensions; dconf_setup; \
+      8) setup_keybinds_dconf; setup_terminal_dconf; setup_general_dconf; install_gnome_extensions; dconf_setup; \
          setup_gnomesettings; setup_aliases; create_bash_aliases_link; setup_gitcredentials; \
          setup_cron_from_repo; pause ;;
       9) setup_terminal_dconf; pause ;;
+      10) setup_general_dconf; pause ;;
       0) return ;;
       *) echo "Opcao invalida"; sleep 1 ;;
     esac
@@ -948,6 +970,7 @@ run_full_install() {
   install_wine
   setup_keybinds_dconf
   setup_terminal_dconf
+  setup_general_dconf
   install_gnome_extensions
   dconf_setup
   setup_gnomesettings
