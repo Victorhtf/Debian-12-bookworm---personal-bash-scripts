@@ -31,6 +31,16 @@ info()  { print_info "$1"; }
 ok()    { print_success "$1"; }
 err()   { print_error "$1"; }
 
+## Trava anti-root: este backup exporta configs do USUARIO (dconf da sessao,
+## ~/.bashrc, crontab do usuario). Rodar como root leria o dconf/HOME do root
+## (vazio/errado) e poderia SOBRESCREVER os assets bons com lixo. Recusa. ##
+if [ "$(id -u)" -eq 0 ]; then
+  err "Nao rode este backup como root/sudo."
+  err "Ele exporta as configuracoes do SEU usuario (dconf, ~/.bashrc, crontab)."
+  err "Rodar como root capturaria dados vazios/errados e corromperia os assets."
+  exit 1
+fi
+
 ## Raiz do repositorio ##
 REPO_ROOT="$(cd "$SCRIPT_DIR" && git rev-parse --show-toplevel 2>/dev/null)"
 [ -z "$REPO_ROOT" ] && REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
