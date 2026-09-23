@@ -682,6 +682,18 @@ setup_kitty_config() {
   else
     print_info "assets/kitty.desktop not found; skipping kitty launcher override."
   fi
+
+  # Override do GNOME Terminal com NoDisplay=true: oculta o gnome-terminal do
+  # menu de apps/overview (nao desinstala; nao toca em /usr/share/applications).
+  local gt_src="$REPO_ASSETS_DIR/org.gnome.Terminal.desktop"
+  if [ -f "$gt_src" ]; then
+    mkdir -p "$HOME/.local/share/applications"
+    cp "$gt_src" "$HOME/.local/share/applications/org.gnome.Terminal.desktop"
+    update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
+    print_success "org.gnome.Terminal.desktop restored from: $gt_src (oculto do menu)"
+  else
+    print_info "assets/org.gnome.Terminal.desktop not found; skipping gnome-terminal override."
+  fi
 }
 
 

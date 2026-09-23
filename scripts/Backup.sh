@@ -59,6 +59,7 @@ BASHRC_FILE="$ASSETS_DIR/bashrc"
 FLATPAK_LIST_FILE="$ASSETS_DIR/flatpak.list"
 KITTY_FILE="$ASSETS_DIR/kitty.conf"
 KITTY_DESKTOP_FILE="$ASSETS_DIR/kitty.desktop"
+GT_DESKTOP_FILE="$ASSETS_DIR/org.gnome.Terminal.desktop"
 
 ## Flags ##
 DO_COMMIT=1
@@ -242,6 +243,19 @@ export_kitty_desktop() {
   fi
 }
 
+## 9c. Override do launcher do GNOME Terminal (~/.local/share/applications/org.gnome.Terminal.desktop) ##
+# Override do usuario com NoDisplay=true para ocultar o gnome-terminal do menu
+# de apps/overview, sem remover o pacote nem tocar em /usr/share/applications.
+export_gnome_terminal_desktop() {
+  info "Exporting org.gnome.Terminal.desktop override..."
+  if [ -f "$HOME_DIR/.local/share/applications/org.gnome.Terminal.desktop" ]; then
+    cp "$HOME_DIR/.local/share/applications/org.gnome.Terminal.desktop" "$GT_DESKTOP_FILE"
+    ok "org.gnome.Terminal.desktop -> $GT_DESKTOP_FILE"
+  else
+    info "~/.local/share/applications/org.gnome.Terminal.desktop not found; skipping."
+  fi
+}
+
 ## 10. Commit se houver diferenca (qualquer arquivo em assets/) ##
 commit_if_changed() {
   [ "$DO_COMMIT" -eq 0 ] && { info "--no-commit set, skipping git."; return; }
@@ -280,5 +294,6 @@ export_bashrc
 export_flatpaks
 export_kitty
 export_kitty_desktop
+export_gnome_terminal_desktop
 commit_if_changed
 ok "Backup finished."
