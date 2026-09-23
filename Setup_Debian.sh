@@ -78,6 +78,7 @@ NC='\033[0m'
 APT_PACKAGES=(
   dbus
   kitty
+  x11-xserver-utils
   aircrack-ng
   btop
   cmatrix
