@@ -670,6 +670,18 @@ setup_kitty_config() {
   mkdir -p "$HOME/.config/kitty"
   cp "$src" "$HOME/.config/kitty/kitty.conf"
   print_success "kitty.conf restored from: $src"
+
+  # Override do lancador (icone/nome na dock e no menu de apps). Sobrescreve o
+  # .desktop do sistema sem alterar /usr/share/applications.
+  local desktop_src="$REPO_ASSETS_DIR/kitty.desktop"
+  if [ -f "$desktop_src" ]; then
+    mkdir -p "$HOME/.local/share/applications"
+    cp "$desktop_src" "$HOME/.local/share/applications/kitty.desktop"
+    update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
+    print_success "kitty.desktop restored from: $desktop_src (icone/launcher)"
+  else
+    print_info "assets/kitty.desktop not found; skipping kitty launcher override."
+  fi
 }
 
 

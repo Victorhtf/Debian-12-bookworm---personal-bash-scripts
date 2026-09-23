@@ -58,6 +58,7 @@ GENERAL_FILE="$ASSETS_DIR/gnome-general.dconf"
 BASHRC_FILE="$ASSETS_DIR/bashrc"
 FLATPAK_LIST_FILE="$ASSETS_DIR/flatpak.list"
 KITTY_FILE="$ASSETS_DIR/kitty.conf"
+KITTY_DESKTOP_FILE="$ASSETS_DIR/kitty.desktop"
 
 ## Flags ##
 DO_COMMIT=1
@@ -227,6 +228,20 @@ export_kitty() {
   fi
 }
 
+## 9b. Override do lancador do Kitty (~/.local/share/applications/kitty.desktop) ##
+# Sobrescreve o .desktop do sistema para trocar o icone/nome exibido na dock e
+# no menu de apps sem tocar no arquivo de /usr/share/applications (que seria
+# apagado numa atualizacao do kitty). Portavel: nao contem paths de HOME.
+export_kitty_desktop() {
+  info "Exporting kitty.desktop override..."
+  if [ -f "$HOME_DIR/.local/share/applications/kitty.desktop" ]; then
+    cp "$HOME_DIR/.local/share/applications/kitty.desktop" "$KITTY_DESKTOP_FILE"
+    ok "kitty.desktop -> $KITTY_DESKTOP_FILE"
+  else
+    info "~/.local/share/applications/kitty.desktop not found; skipping."
+  fi
+}
+
 ## 10. Commit se houver diferenca (qualquer arquivo em assets/) ##
 commit_if_changed() {
   [ "$DO_COMMIT" -eq 0 ] && { info "--no-commit set, skipping git."; return; }
@@ -264,5 +279,6 @@ export_general
 export_bashrc
 export_flatpaks
 export_kitty
+export_kitty_desktop
 commit_if_changed
 ok "Backup finished."
