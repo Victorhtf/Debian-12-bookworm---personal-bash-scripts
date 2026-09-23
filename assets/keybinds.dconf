@@ -81,8 +81,8 @@ previous=['F3']
 
 [org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0]
 binding='<Alt>q'
-command='gnome-terminal'
-name='Launch Terminal'
+command='kitty'
+name='Launch Kitty'
 
 [org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1]
 binding='Print'
