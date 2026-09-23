@@ -57,6 +57,7 @@ CRON_FILE="$ASSETS_DIR/crontab"
 GENERAL_FILE="$ASSETS_DIR/gnome-general.dconf"
 BASHRC_FILE="$ASSETS_DIR/bashrc"
 FLATPAK_LIST_FILE="$ASSETS_DIR/flatpak.list"
+KITTY_FILE="$ASSETS_DIR/kitty.conf"
 
 ## Flags ##
 DO_COMMIT=1
@@ -215,7 +216,18 @@ export_flatpaks() {
   fi
 }
 
-## 9. Commit se houver diferenca (qualquer arquivo em assets/) ##
+## 9. Config do Kitty ##
+export_kitty() {
+  info "Exporting kitty.conf..."
+  if [ -f "$HOME_DIR/.config/kitty/kitty.conf" ]; then
+    cp "$HOME_DIR/.config/kitty/kitty.conf" "$KITTY_FILE"
+    ok "kitty.conf -> $KITTY_FILE"
+  else
+    info "~/.config/kitty/kitty.conf not found; skipping."
+  fi
+}
+
+## 10. Commit se houver diferenca (qualquer arquivo em assets/) ##
 commit_if_changed() {
   [ "$DO_COMMIT" -eq 0 ] && { info "--no-commit set, skipping git."; return; }
   cd "$REPO_ROOT" || { err "Cannot cd to repo root."; return; }
@@ -251,5 +263,6 @@ export_cron
 export_general
 export_bashrc
 export_flatpaks
+export_kitty
 commit_if_changed
 ok "Backup finished."

@@ -77,6 +77,7 @@ NC='\033[0m'
 
 APT_PACKAGES=(
   dbus
+  kitty
   aircrack-ng
   btop
   cmatrix
@@ -656,6 +657,21 @@ setup_bashrc_from_repo() {
 }
 
 
+## Restaura a config do Kitty (~/.config/kitty/kitty.conf) ##
+setup_kitty_config() {
+  print_info "Restoring kitty.conf from repo..."
+
+  local src="$REPO_ASSETS_DIR/kitty.conf"
+  if [ ! -f "$src" ]; then
+    print_info "assets/kitty.conf not found; skipping kitty config."
+    return
+  fi
+  mkdir -p "$HOME/.config/kitty"
+  cp "$src" "$HOME/.config/kitty/kitty.conf"
+  print_success "kitty.conf restored from: $src"
+}
+
+
 ## Restaura os agendamentos (crontab) versionados em assets/crontab ##
 ## O arquivo usa o placeholder __HOME__ para portabilidade entre usuarios. ##
 setup_cron_from_repo() {
@@ -896,6 +912,7 @@ menu_configs() {
     echo " 9) Restaurar perfil do GNOME Terminal (dconf)"
     echo "10) Restaurar configs gerais do GNOME (aparencia, mouse, wallpaper...)"
     echo "11) Restaurar ~/.bashrc do repo (backup do atual e feito antes)"
+    echo "12) Restaurar config do Kitty (~/.config/kitty/kitty.conf)"
     echo " 0) Voltar"
     read -rp "> " o
     case "$o" in
@@ -912,6 +929,7 @@ menu_configs() {
       9) setup_terminal_dconf; pause ;;
       10) setup_general_dconf; pause ;;
       11) setup_bashrc_from_repo; pause ;;
+      12) setup_kitty_config; pause ;;
       0) return ;;
       *) echo "Opcao invalida"; sleep 1 ;;
     esac
