@@ -1,0 +1,27 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: nautilus_open_any_terminal\n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: 2026-09-24 20:23-0300\n"
+"Last-Translator: victorhtf\n"
+"Language-Team: Brazilian Portuguese\n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+# Rotulo do menu de contexto ao clicar dentro/na pasta (foreground).
+msgid "Open {} Here"
+msgstr "Terminal"
+
+# Rotulo quando a pasta esta selecionada (variacao usada em alguns casos).
+msgid "Open in {}"
+msgstr "Terminal"
+
+# Dica (tooltip) coerente.
+msgid "Open {} in This Directory"
+msgstr "Abrir o terminal neste diretorio"
+
+msgid "Open {} in {}"
+msgstr "Abrir o terminal em {}"

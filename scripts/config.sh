@@ -22,7 +22,7 @@ CONF_DIR="$DEBIAN_DIR/conf"
 DUMP_DIR="$DEBIAN_DIR/dump"
 BACKUP_DIR="$HOME_DIR/Backups"
 WALLPAPER_DIR="$HOME_DIR/pictures/wallpapers"
-DOWNLOADS_DIR="$HOME_DIR/Downloads"
+DOWNLOADS_DIR="$HOME_DIR/downloads"
 
 ## Estado interno (sentinela de inicializacao, logs) ##
 STATE_DIR="$HOME_DIR/.config/debian-scripts"

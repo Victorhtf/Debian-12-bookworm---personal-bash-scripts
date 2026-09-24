@@ -17,13 +17,13 @@ USER_HOME="$(getent passwd "$USERNAME" | cut -d: -f6)"
 USER_HOME="${USER_HOME:-$HOME}"
 
 ## Variables setup ##
-DOWNLOAD_DIRECTORY="$USER_HOME/Downloads"
+DOWNLOAD_DIRECTORY="$USER_HOME/downloads"
 APPLICATIONS_DIRECTORY="$DOWNLOAD_DIRECTORY/applications"
 BACKUP_DIRECTORY="$USER_HOME/Backups"
 # Raiz do repositorio (onde este Setup_Debian.sh esta), derivada automaticamente.
 # Assim nao ha hardcode de nome de pasta (funciona com debian-scripts, etc.).
 DEBIAN_DIRECTORY="$SCRIPT_DIR"
-TEMPLATE_DIRECTORY="$USER_HOME/Templates"
+TEMPLATE_DIRECTORY="$USER_HOME/templates"
 
 ## Origem: pastas dentro do proprio repositorio clonado ##
 REPO_SCRIPTS_DIR="$SCRIPT_DIR/scripts"
@@ -697,6 +697,125 @@ setup_kitty_config() {
 }
 
 
+## Configura o menu "Abrir no terminal" do Nautilus para usar o Kitty.        ##
+## Replica os passos feitos manualmente:                                      ##
+##   1) instala a extensao nautilus-open-any-terminal (via .deb da release)   ##
+##   2) remove a extensao antiga (nautilus-extension-gnome-terminal)          ##
+##   3) aponta a extensao para o kitty (gsettings)                            ##
+##   4) instala a traducao customizada ("Terminal") em ~/.local/share/locale  ##
+##      -> esse local tem prioridade e sobrevive a updates do pacote.         ##
+setup_nautilus_terminal() {
+  print_info "Setting up Nautilus 'open terminal' to use Kitty..."
+
+  # --- 1) Instala a extensao nautilus-open-any-terminal (pacote .deb) --------
+  # A extensao nao esta no apt do Debian; usamos o .deb oficial da release.
+  local NOAT_VERSION="0.8.3"
+  local NOAT_DEB="nautilus-extension-any-terminal_${NOAT_VERSION}-1_all.deb"
+  local NOAT_URL="https://github.com/Stunkymonkey/nautilus-open-any-terminal/releases/download/${NOAT_VERSION}/${NOAT_DEB}"
+
+  if dpkg -l nautilus-extension-any-terminal 2>/dev/null | grep -q '^ii'; then
+    print_info "nautilus-extension-any-terminal ja instalado."
+  else
+    local tmp_deb
+    tmp_deb="$(mktemp --suffix=.deb)"
+    print_info "Baixando extensao: $NOAT_URL"
+    if curl -fL -o "$tmp_deb" "$NOAT_URL"; then
+      # Dependencias necessarias + instalacao do .deb local
+      sudo apt install -y python3-nautilus gir1.2-gtk-4.0 2>/dev/null
+      if sudo apt install -y "$tmp_deb"; then
+        print_success "nautilus-extension-any-terminal instalado."
+      else
+        print_error "Falha ao instalar a extensao ($tmp_deb)."
+      fi
+    else
+      print_error "Falha ao baixar a extensao de $NOAT_URL"
+    fi
+    rm -f "$tmp_deb"
+  fi
+
+  # --- 2) Remove a extensao antiga (item duplicado do gnome-terminal) --------
+  if dpkg -l nautilus-extension-gnome-terminal 2>/dev/null | grep -q '^ii'; then
+    print_info "Removendo item de menu antigo (nautilus-extension-gnome-terminal)..."
+    sudo apt remove -y nautilus-extension-gnome-terminal \
+      && print_success "Extensao antiga removida." \
+      || print_error "Falha ao remover a extensao antiga."
+  else
+    print_info "nautilus-extension-gnome-terminal nao instalado (nada a remover)."
+  fi
+
+  # --- 3) Aponta a extensao para o kitty -------------------------------------
+  if gsettings writable com.github.stunkymonkey.nautilus-open-any-terminal terminal >/dev/null 2>&1; then
+    gsettings set com.github.stunkymonkey.nautilus-open-any-terminal terminal kitty
+    gsettings set com.github.stunkymonkey.nautilus-open-any-terminal new-tab false 2>/dev/null || true
+    print_success "Extensao configurada para usar o Kitty."
+  else
+    print_info "Schema gsettings da extensao ainda nao disponivel (pode exigir logout/login)."
+  fi
+
+  # --- 4) Traducao customizada do rotulo -> "Terminal" -----------------------
+  # A extensao procura traducoes primeiro em ~/.local/share/locale (tem
+  # prioridade sobre /usr/share e nao e sobrescrita por updates do pacote).
+  local po_src="$REPO_ASSETS_DIR/nautilus-open-any-terminal.po"
+  if [ -f "$po_src" ] && command -v msgfmt >/dev/null 2>&1; then
+    local locale_dir="$HOME/.local/share/locale/pt_BR/LC_MESSAGES"
+    mkdir -p "$locale_dir"
+    if msgfmt "$po_src" -o "$locale_dir/nautilus-open-any-terminal.mo"; then
+      print_success "Traducao do menu instalada (rotulo: 'Terminal')."
+    else
+      print_error "Falha ao compilar a traducao ($po_src)."
+    fi
+  else
+    print_info "assets/nautilus-open-any-terminal.po ou msgfmt ausente; pulando traducao."
+  fi
+
+  # --- Recarrega o Nautilus para aplicar --------------------------------------
+  nautilus -q 2>/dev/null || true
+  print_success "Nautilus terminal configurado. (Se o rotulo nao mudar, faca logout/login.)"
+}
+
+
+## Instala o conjunto de scripts de contexto do Nautilus (cfgnunes).          ##
+## Projeto: https://github.com/cfgnunes/nautilus-scripts (MIT, ShellCheck).   ##
+## Adiciona varias acoes uteis no menu do botao direito (extrair, checksums,  ##
+## comprimir, comparar, git clone, etc.). Instalado de forma NAO-interativa   ##
+## a partir de um clone local (evita o inseguro "curl | bash").               ##
+setup_nautilus_scripts() {
+  print_info "Installing cfgnunes/nautilus-scripts (context-menu actions)..."
+
+  if ! command -v git >/dev/null 2>&1; then
+    print_error "git nao encontrado; instale o git antes (menu Apps)."
+    return
+  fi
+
+  # Clona/atualiza num diretorio de fontes de terceiros dentro do repo.
+  local vendor_dir="$DEBIAN_DIRECTORY/vendor/nautilus-scripts"
+  local repo_url="https://github.com/cfgnunes/nautilus-scripts.git"
+
+  if [ -d "$vendor_dir/.git" ]; then
+    print_info "Atualizando clone existente em $vendor_dir ..."
+    git -C "$vendor_dir" pull --ff-only 2>/dev/null \
+      || print_info "Nao foi possivel atualizar (seguindo com o que ja existe)."
+  else
+    mkdir -p "$(dirname "$vendor_dir")"
+    if ! git clone --depth 1 "$repo_url" "$vendor_dir"; then
+      print_error "Falha ao clonar $repo_url"
+      return
+    fi
+  fi
+
+  # Roda o instalador oficial em modo NAO-interativo (-n): usa os defaults
+  # (checa dependencias, instala acoes + atalhos de teclado, recarrega o
+  # gerenciador). Nao roda como root (o proprio instalador recusa).
+  if [ -f "$vendor_dir/install.sh" ]; then
+    ( cd "$vendor_dir" && bash install.sh -n ) \
+      && print_success "nautilus-scripts instalado (menu de contexto do Nautilus)." \
+      || print_error "Falha ao rodar o install.sh do nautilus-scripts."
+  else
+    print_error "install.sh nao encontrado em $vendor_dir"
+  fi
+}
+
+
 ## Restaura os agendamentos (crontab) versionados em assets/crontab ##
 ## O arquivo usa o placeholder __HOME__ para portabilidade entre usuarios. ##
 setup_cron_from_repo() {
@@ -938,6 +1057,8 @@ menu_configs() {
     echo "10) Restaurar configs gerais do GNOME (aparencia, mouse, wallpaper...)"
     echo "11) Restaurar ~/.bashrc do repo (backup do atual e feito antes)"
     echo "12) Restaurar config do Kitty (~/.config/kitty/kitty.conf)"
+    echo "13) Configurar menu 'terminal' do Nautilus (Kitty + rotulo 'Terminal')"
+    echo "14) Instalar nautilus-scripts (acoes de contexto: extrair, checksum, git...)"
     echo " 0) Voltar"
     read -rp "> " o
     case "$o" in
@@ -950,11 +1071,13 @@ menu_configs() {
       7) setup_gitcredentials; pause ;;
       8) setup_keybinds_dconf; setup_terminal_dconf; setup_general_dconf; install_gnome_extensions; dconf_setup; \
          setup_gnomesettings; setup_aliases; create_bash_aliases_link; setup_gitcredentials; \
-         setup_cron_from_repo; pause ;;
+         setup_kitty_config; setup_nautilus_terminal; setup_nautilus_scripts; setup_cron_from_repo; pause ;;
       9) setup_terminal_dconf; pause ;;
       10) setup_general_dconf; pause ;;
       11) setup_bashrc_from_repo; pause ;;
       12) setup_kitty_config; pause ;;
+      13) setup_nautilus_terminal; pause ;;
+      14) setup_nautilus_scripts; pause ;;
       0) return ;;
       *) echo "Opcao invalida"; sleep 1 ;;
     esac
@@ -1050,6 +1173,9 @@ run_full_install() {
   setup_keybinds_dconf
   setup_terminal_dconf
   setup_general_dconf
+  setup_kitty_config
+  setup_nautilus_terminal
+  setup_nautilus_scripts
   install_gnome_extensions
   dconf_setup
   setup_gnomesettings

@@ -1,0 +1,3 @@
+# Clones de projetos de terceiros baixados pelo Setup_Debian.sh
+# (ex.: cfgnunes/nautilus-scripts). Nao versionar: sao gerenciados via clone/pull.
+vendor/
