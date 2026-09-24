@@ -50,7 +50,7 @@ sigma=30
 
 [caffeine]
 cli-toggle=false
-indicator-position-max=2
+indicator-position-max=3
 
 [clipboard-indicator]
 history-size=300
@@ -136,7 +136,7 @@ quick-settings-backlight=true
 support-notifier-type=0
 type-to-search=true
 window-demands-attention-focus=true
-window-maximized-on-create=true
+window-maximized-on-create=false
 workspace-thumbnail-to-main-view=false
 
 [libpanel]
@@ -163,11 +163,21 @@ remove-output-volume-slider=false
 version=2
 
 [quick-settings-tweaks]
+datemenu-disable-menu=false
+datemenu-hide-left-box=true
 dnd-quick-toggle-indicator-position='date-menu'
 media-contorl-show-pause-button=true
+media-enabled=true
 notifications-compact=true
+notifications-enabled=true
 overlay-menu-enabled=false
-toggles-layout-enabled=false
+system-indicator-layout-enabled=false
+system-indicator-privacy-indicator-style='default'
+system-indicator-screen-recording-indicator-use-accent=false
+toggles-layout-enabled=true
+unsafe-quick-toggle-enabled=true
+unsafe-quick-toggle-last-state=false
+volume-mixer-enabled=false
 weather-enabled=false
 
 [space-bar/appearance]
@@ -187,7 +197,7 @@ inner-gaps=uint32 16
 last-version-name-installed='17.3'
 layouts-json='[{"id":"Layout 1","tiles":[{"x":0,"y":0,"width":0.22,"height":0.5,"groups":[1,2]},{"x":0,"y":0.5,"width":0.22,"height":0.5,"groups":[1,2]},{"x":0.22,"y":0,"width":0.56,"height":1,"groups":[2,3]},{"x":0.78,"y":0,"width":0.22,"height":0.5,"groups":[3,4]},{"x":0.78,"y":0.5,"width":0.22,"height":0.5,"groups":[3,4]}]},{"id":"Layout 2","tiles":[{"x":0,"y":0,"width":0.22,"height":1,"groups":[1]},{"x":0.22,"y":0,"width":0.56,"height":1,"groups":[1,2]},{"x":0.78,"y":0,"width":0.22,"height":1,"groups":[2]}]},{"id":"Layout 3","tiles":[{"x":0,"y":0,"width":0.33,"height":1,"groups":[1]},{"x":0.33,"y":0,"width":0.67,"height":1,"groups":[1]}]},{"id":"Layout 4","tiles":[{"x":0,"y":0,"width":0.67,"height":1,"groups":[1]},{"x":0.67,"y":0,"width":0.33,"height":1,"groups":[1]}]}]'
 overridden-settings="{\"org.gnome.mutter.keybindings\":{\"toggle-tiled-right\":\"['<Super>Right']\",\"toggle-tiled-left\":\"['<Super>Left']\"},\"org.gnome.desktop.wm.keybindings\":{\"maximize\":\"['<Super>Up']\",\"unmaximize\":\"['<Super>Down', '<Alt>F5']\"},\"org.gnome.mutter\":{\"edge-tiling\":\"true\"}}"
-selected-layouts=[['Layout 1'], ['Layout 3'], ['Layout 3']]
+selected-layouts=[['Layout 1', 'Layout 1'], ['Layout 3', 'Layout 1'], ['Layout 3', 'Layout 1']]
 show-indicator=true
 window-use-custom-border-color=false
 

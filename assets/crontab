@@ -1,2 +1,3 @@
 0 */6 * * * DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus __HOME__/debian-scripts/scripts/Backup.sh --push >> __HOME__/.config/debian-scripts/backup.log 2>&1
 0 9 * * * DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus __HOME__/debian-scripts/scripts/Daily_Debian.sh >> __HOME__/.config/debian-scripts/daily.log 2>&1
+*/15 * * * * DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus __HOME__/debian-scripts/scripts/Organize_auto.sh >> __HOME__/.config/debian-scripts/organize.log 2>&1
