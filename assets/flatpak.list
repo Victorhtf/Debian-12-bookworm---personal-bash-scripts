@@ -1,7 +1,6 @@
 be.alexandervanhee.gradia
 com.discordapp.Discord
 com.github.IsmaelMartinez.teams_for_linux
-com.github.jeromerobert.pdfarranger
 com.github.tchx84.Flatseal
 com.github.wwmm.easyeffects
 com.google.EarthPro
@@ -29,4 +28,3 @@ org.mozilla.thunderbird_esr
 org.nickvision.tubeconverter
 org.onlyoffice.desktopeditors
 org.telegram.desktop
-org.winehq.Wine

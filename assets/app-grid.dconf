@@ -1,0 +1,37 @@
+[/]
+folder-children=['Internet', 'Escritorio', 'Multimidia', 'Desenvolvimento', 'Sistema', 'Acessorios', 'Outros']
+
+[folders/Acessorios]
+apps=['org.gnome.Calculator.desktop', 'org.gnome.clocks.desktop', 'org.gnome.Weather.desktop', 'org.gnome.Maps.desktop', 'org.gnome.Characters.desktop', 'org.gnome.font-viewer.desktop', 'org.gnome.TextEditor.desktop', 'io.gitlab.metadatacleaner.metadatacleaner.desktop', 'simple-scan.desktop', 'org.gnome.FileRoller.desktop']
+name='Acessórios'
+translate=false
+
+[folders/Desenvolvimento]
+apps=['org.gnome.Boxes.desktop', 'vim.desktop', 'display-im7.q16.desktop', 'com.valvesoftware.SteamLink.desktop', 'dev.deedles.Trayscale.desktop', 'john-the-ripper_info.desktop']
+name='Desenvolvimento'
+translate=false
+
+[folders/Escritorio]
+apps=['org.onlyoffice.desktopeditors.desktop', 'libreoffice-startcenter.desktop', 'libreoffice-writer.desktop', 'libreoffice-calc.desktop', 'libreoffice-impress.desktop', 'libreoffice-draw.desktop', 'libreoffice-math.desktop', 'org.gnome.Evince.desktop', 'org.gnome.Calendar.desktop', 'org.gnome.Contacts.desktop', 'org.gnome.Evolution.desktop', 'teams-for-linux_teams-for-linux.desktop']
+name='Escritório'
+translate=false
+
+[folders/Internet]
+apps=['firefox-esr.desktop', 'microsoft-edge.desktop', 'org.mozilla.thunderbird_esr.desktop', 'com.slack.Slack.desktop', 'com.google.EarthPro.desktop', 'io.gitlab.news_flash.NewsFlash.desktop', 'org.nickvision.tubeconverter.desktop', 'org.gnome.Connections.desktop']
+name='Internet'
+translate=false
+
+[folders/Multimidia]
+apps=['gimp.desktop', 'org.flameshot.Flameshot.desktop', 'be.alexandervanhee.gradia.desktop', 'io.gitlab.theevilskeleton.Upscaler.desktop', 'org.gnome.Shotwell.desktop', 'org.gnome.Loupe.desktop', 'org.gnome.Music.desktop', 'org.gnome.Totem.desktop', 'org.gnome.Snapshot.desktop', 'org.gnome.SoundRecorder.desktop', 'de.haeckerfelix.Shortwave.desktop', 'com.rafaelmardojai.Blanket.desktop', 'io.github.seadve.Mousai.desktop', 'org.gnome.gitlab.YaLTeR.VideoTrimmer.desktop', 'com.stremio.Stremio.desktop', 'vlc.desktop']
+name='Multimídia'
+translate=false
+
+[folders/Outros]
+apps=['cmatrix.desktop', 'debian-xterm.desktop', 'debian-uxterm.desktop', 'org.gnome.Terminal.desktop', 'org.freedesktop.IBus.Setup.desktop', 'im-config.desktop', 'org.freedesktop.MalcontentControl.desktop', 'org.gnome.Tour.desktop', 'yelp.desktop', 'lstopo.desktop']
+name='Outros'
+translate=false
+
+[folders/Sistema]
+apps=['gparted.desktop', 'org.gnome.DiskUtility.desktop', 'org.gnome.baobab.desktop', 'org.gnome.SystemMonitor.desktop', 'gnome-system-monitor-kde.desktop', 'org.gnome.Logs.desktop', 'btop.desktop', 'htop.desktop', 'gdebi.desktop', 'org.gnome.Software.desktop', 'org.gnome.tweaks.desktop', 'com.mattjakeman.ExtensionManager.desktop', 'com.github.tchx84.Flatseal.desktop', 'io.github.realmazharhussain.GdmSettings.desktop', 'io.github.flattool.Ignition.desktop', 'io.github.ronniedroid.concessio.desktop', 'io.github.swordpuffin.wardrobe.desktop', 'org.gnome.seahorse.Application.desktop', 'nm-connection-editor.desktop', 'forticlient.desktop']
+name='Sistema'
+translate=false
