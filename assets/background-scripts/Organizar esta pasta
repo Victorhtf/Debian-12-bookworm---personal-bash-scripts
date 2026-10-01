@@ -1,0 +1,37 @@
+#!/bin/bash
+#
+# Organizar esta pasta
+# --------------------
+# Script de BACKGROUND do Nautilus: roda ao clicar com o botao direito na
+# AREA VAZIA de uma pasta. Organiza a pasta atual em subpastas por tipo,
+# reutilizando o Organize_auto.sh do repo.
+#
+# A extensao Python (nautilus_background_scripts.py) passa a pasta atual
+# via variavel de ambiente NAUTILUS_SCRIPT_CURRENT_URI (padrao do Nautilus)
+# e tambem como primeiro argumento ($1).
+
+set -euo pipefail
+
+# Resolve a pasta atual: prefere o argumento; cai para a env do Nautilus.
+target="${1:-}"
+if [ -z "$target" ] && [ -n "${NAUTILUS_SCRIPT_CURRENT_URI:-}" ]; then
+  # Converte file:///caminho em /caminho (decodifica %20 etc. com printf)
+  uri="${NAUTILUS_SCRIPT_CURRENT_URI#file://}"
+  target="$(printf '%b' "${uri//%/\\x}")"
+fi
+target="${target:-$PWD}"
+
+ORGANIZER="$HOME/debian/scripts/Organize_auto.sh"
+
+if [ ! -x "$ORGANIZER" ]; then
+  command -v zenity >/dev/null 2>&1 && \
+    zenity --error --text="Organize_auto.sh nao encontrado em:\n$ORGANIZER" 2>/dev/null
+  echo "Organize_auto.sh nao encontrado: $ORGANIZER" >&2
+  exit 1
+fi
+
+"$ORGANIZER" "$target"
+
+# Notificacao best-effort ao concluir
+command -v notify-send >/dev/null 2>&1 && \
+  notify-send "Organizar pasta" "Pasta organizada: $target" 2>/dev/null || true

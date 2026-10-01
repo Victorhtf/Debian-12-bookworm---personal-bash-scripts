@@ -837,6 +837,53 @@ setup_nautilus_scripts() {
 }
 
 
+## Instala a extensao "background-scripts" do Nautilus.                        ##
+## Adiciona um submenu "Scripts" no clique com botao direito na AREA VAZIA     ##
+## (background) de uma pasta -- algo que a pasta de scripts nativa do Nautilus ##
+## NAO faz. Lista dinamicamente os executaveis de                             ##
+## ~/.local/share/nautilus/background-scripts/ e os executa passando a pasta   ##
+## atual (como $1 e via NAUTILUS_SCRIPT_CURRENT_URI). Basta jogar um           ##
+## executavel naquela pasta para ele aparecer no menu.                         ##
+## Requer python3-nautilus (ja instalado via setup_nautilus_terminal/APT).     ##
+setup_nautilus_background_scripts() {
+  print_info "Installing Nautilus background-scripts (menu 'Scripts' na area vazia)..."
+
+  local ext_src="$REPO_ASSETS_DIR/nautilus-python/nautilus_background_scripts.py"
+  local scripts_src="$REPO_ASSETS_DIR/background-scripts"
+  local ext_dst_dir="$HOME/.local/share/nautilus-python/extensions"
+  local scripts_dst_dir="$HOME/.local/share/nautilus/background-scripts"
+
+  if [ ! -f "$ext_src" ]; then
+    print_error "Extensao nao encontrada em $ext_src (rode apos copiar assets)."
+    return
+  fi
+
+  # Garante a dependencia (binding python do Nautilus).
+  if ! dpkg -l python3-nautilus 2>/dev/null | grep -q '^ii'; then
+    print_info "Instalando python3-nautilus (dependencia da extensao)..."
+    sudo apt install -y python3-nautilus 2>/dev/null \
+      || print_error "Falha ao instalar python3-nautilus."
+  fi
+
+  # 1) Instala a extensao python.
+  mkdir -p "$ext_dst_dir"
+  install -m 0644 "$ext_src" "$ext_dst_dir/nautilus_background_scripts.py"
+  print_success "Extensao instalada em $ext_dst_dir."
+
+  # 2) Instala a pasta de scripts de background (preserva permissoes +x).
+  mkdir -p "$scripts_dst_dir"
+  if [ -d "$scripts_src" ]; then
+    cp -a "$scripts_src/." "$scripts_dst_dir/"
+    chmod +x "$scripts_dst_dir"/* 2>/dev/null || true
+    print_success "Scripts de background instalados em $scripts_dst_dir."
+  fi
+
+  # 3) Recarrega o Nautilus. (Extensoes python podem exigir logout/login.)
+  nautilus -q 2>/dev/null || true
+  print_success "Pronto. (Se o menu 'Scripts' na area vazia nao aparecer, faca logout/login.)"
+}
+
+
 ## Restaura os agendamentos (crontab) versionados em assets/crontab ##
 ## O arquivo usa o placeholder __HOME__ para portabilidade entre usuarios. ##
 setup_cron_from_repo() {
@@ -1176,6 +1223,7 @@ menu_configs() {
     echo "14) Instalar nautilus-scripts (acoes de contexto: extrair, checksum, git...)"
     echo "15) Organizar grid de apps em pastas (Internet, Escritorio, Multimidia...)"
     echo "16) Auto-mover + seguir janelas por workspace (wrapper + lancadores)"
+    echo "17) Nautilus: menu 'Scripts' na area vazia (background-scripts)"
     echo " 0) Voltar"
     read -rp "> " o
     case "$o" in
@@ -1188,7 +1236,7 @@ menu_configs() {
       7) setup_gitcredentials; pause ;;
       8) setup_keybinds_dconf; setup_terminal_dconf; setup_general_dconf; install_gnome_extensions; dconf_setup; \
          setup_gnomesettings; setup_aliases; create_bash_aliases_link; setup_gitcredentials; \
-         setup_kitty_config; setup_nautilus_terminal; setup_nautilus_scripts; setup_app_grid; setup_auto_move_workspaces; setup_cron_from_repo; pause ;;
+         setup_kitty_config; setup_nautilus_terminal; setup_nautilus_scripts; setup_nautilus_background_scripts; setup_app_grid; setup_auto_move_workspaces; setup_cron_from_repo; pause ;;
       9) setup_terminal_dconf; pause ;;
       10) setup_general_dconf; pause ;;
       11) setup_bashrc_from_repo; pause ;;
@@ -1197,6 +1245,7 @@ menu_configs() {
       14) setup_nautilus_scripts; pause ;;
       15) setup_app_grid; pause ;;
       16) setup_auto_move_workspaces; pause ;;
+      17) setup_nautilus_background_scripts; pause ;;
       0) return ;;
       *) echo "Opcao invalida"; sleep 1 ;;
     esac
@@ -1295,6 +1344,7 @@ run_full_install() {
   setup_kitty_config
   setup_nautilus_terminal
   setup_nautilus_scripts
+  setup_nautilus_background_scripts
   install_gnome_extensions
   dconf_setup
   setup_gnomesettings
