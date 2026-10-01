@@ -5,7 +5,7 @@ text-scaling-factor=1.25
 toolkit-accessibility=false
 
 [org/gnome/desktop/wm/preferences]
-button-layout=':minimize,close'
+button-layout=':minimize,maximize,close'
 
 [org/gnome/desktop/peripherals/keyboard]
 numlock-state=true

@@ -1064,7 +1064,7 @@ setup_auto_move_workspaces() {
 ## Setup GNOME minimize button in windows ##
 setup_gnomesettings() {
   print_info "Setting up minimize button in GNOME interface..."
-  gsettings set org.gnome.desktop.wm.preferences button-layout ":minimize,close"
+  gsettings set org.gnome.desktop.wm.preferences button-layout ":minimize,maximize,close"
   print_success "GNOME minimize button set up successfully."
 }
 
