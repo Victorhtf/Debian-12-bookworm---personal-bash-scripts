@@ -611,8 +611,8 @@ setup_keybinds_dconf() {
     # Marca que este sistema ja recebeu as binds do repo. O backup agendado
     # so pode exportar/commitar depois que esta sentinela existir, evitando
     # que uma maquina recem-instalada sobrescreva o repo com um estado vazio.
-    mkdir -p "$HOME/.config/debian-scripts"
-    date '+%Y-%m-%dT%H:%M:%S%z' > "$HOME/.config/debian-scripts/.initialized"
+    mkdir -p "$HOME/.config/debian"
+    date '+%Y-%m-%dT%H:%M:%S%z' > "$HOME/.config/debian/.initialized"
     print_success "Keyboard binds (dconf) configured from: $kb_file"
   else
     print_error "Error: keybinds.dconf not found in $REPO_ASSETS_DIR nor $CONF_FILE_DESTINATION"
@@ -932,7 +932,7 @@ setup_backup_cron() {
 
   local backup_script="$SCRIPTS_FILE_DESTINATION/Backup.sh"
   local schedule="0 */6 * * *"   # a cada 6 horas; ajuste se quiser
-  local log_file="$HOME/.config/debian-scripts/backup.log"
+  local log_file="$HOME/.config/debian/backup.log"
 
   if [ ! -f "$backup_script" ]; then
     print_error "Backup script not found at $backup_script (rode copy_scripts_files antes)."

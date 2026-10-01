@@ -25,7 +25,7 @@ WALLPAPER_DIR="$HOME_DIR/pictures/wallpapers"
 DOWNLOADS_DIR="$HOME_DIR/downloads"
 
 ## Estado interno (sentinela de inicializacao, logs) ##
-STATE_DIR="$HOME_DIR/.config/debian-scripts"
+STATE_DIR="$HOME_DIR/.config/debian"
 INIT_SENTINEL="$STATE_DIR/.initialized"
 
 ## Terminal colors ##
