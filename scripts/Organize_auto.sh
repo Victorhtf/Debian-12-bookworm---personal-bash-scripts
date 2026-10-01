@@ -34,7 +34,7 @@ organize_dir() {
   fi
   print_info "Organizando $dir ..."
   mkdir -p "$dir/images" "$dir/media" "$dir/documents" "$dir/scripts" \
-           "$dir/compressed" "$dir/other" "$dir/applications"
+           "$dir/compressed" "$dir/other" "$dir/applications" "$dir/folders"
 
   # Imagens
   find "$dir" -maxdepth 1 -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.tif" -o -iname "*.tiff" -o -iname "*.bmp" -o -iname "*.gif" -o -iname "*.eps" -o -iname "*.raw" -o -iname "*.webp" -o -iname "*.svg" \) -exec mv -n {} "$dir/images" \; 2>/dev/null
@@ -48,6 +48,21 @@ organize_dir() {
   find "$dir" -maxdepth 1 -type f \( -iname "*.rar" -o -iname "*.zip" -o -iname "*.tar.gz" -o -iname "*.tar.xz" -o -iname "*.gz" -o -iname "*.7z" -o -iname "*.bz2" \) -exec mv -n {} "$dir/compressed" \; 2>/dev/null
   # Aplicativos
   find "$dir" -maxdepth 1 -type f \( -iname "*.deb" -o -iname "*.exe" -o -iname "*.AppImage" \) -exec mv -n {} "$dir/applications" \; 2>/dev/null
+
+  # Pastas soltas -> "folders". Exclui as PROPRIAS subpastas de organizacao
+  # (images, media, ... folders), senao o script moveria elas para dentro de
+  # si mesmas e quebraria a estrutura. -mindepth 1 -maxdepth 1 -type d pega so
+  # as pastas no primeiro nivel.
+  find "$dir" -mindepth 1 -maxdepth 1 -type d \
+    ! -name images ! -name media ! -name documents ! -name scripts \
+    ! -name compressed ! -name other ! -name applications ! -name folders \
+    -exec mv -n {} "$dir/folders" \; 2>/dev/null
+
+  # Catch-all: qualquer arquivo solto restante (extensao nao mapeada, ou sem
+  # extensao) vai para "other". Como as categorias acima ja moveram os tipos
+  # conhecidos, aqui sobra apenas o que nao se encaixou. -maxdepth 1 -type f
+  # garante que nao mexemos nas subpastas de organizacao.
+  find "$dir" -maxdepth 1 -type f -exec mv -n {} "$dir/other" \; 2>/dev/null
 
   print_success "Organizado: $dir"
 }
