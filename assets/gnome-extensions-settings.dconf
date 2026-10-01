@@ -6,7 +6,7 @@ symbolic-icon=true
 use-custom-icon=false
 
 [auto-move-windows]
-application-list=['steam.desktop:2', 'com.valvesoftware.SteamLink.desktop:2', 'com.stremio.Stremio.desktop:2', 'com.usebottles.bottles.desktop:2', 'com.discordapp.Discord.desktop:2', 'org.telegram.desktop.desktop:2', 'vlc.desktop:3', 'de.haeckerfelix.Shortwave.desktop:3', 'io.github.seadve.Mousai.desktop:3']
+application-list=['kiro.desktop:1', 'code.desktop:1', 'postman_postman.desktop:1', 'io.dbeaver.DBeaverCommunity.desktop:1', 'com.github.IsmaelMartinez.teams_for_linux.desktop:1', 'teams-for-linux_teams-for-linux.desktop:1', 'steam.desktop:2', 'com.valvesoftware.SteamLink.desktop:2', 'com.discordapp.Discord.desktop:2', 'org.telegram.desktop.desktop:2', 'gimp.desktop:2', 'org.gnome.Totem.desktop:2', 'com.stremio.Stremio.desktop:2', 'com.usebottles.bottles.desktop:2', 'de.haeckerfelix.Shortwave.desktop:2', 'io.github.seadve.Mousai.desktop:2']
 
 [blur-my-shell]
 rounded-blur-found=false

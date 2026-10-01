@@ -143,15 +143,36 @@ APT_PACKAGES=(
 )
 
 FLATPAK_PACKAGES=(
-  org.telegram.desktop
-  com.mattjakeman.ExtensionManager
-  io.github.realmazharhussain.GdmSettings
-  com.stremio.Stremio
-  io.dbeaver.DBeaverCommunity
-  com.rafaelmardojai.Blanket
-  com.github.tchx84.Flatseal
   be.alexandervanhee.gradia
   com.discordapp.Discord
+  com.github.IsmaelMartinez.teams_for_linux
+  com.github.tchx84.Flatseal
+  com.github.wwmm.easyeffects
+  com.google.EarthPro
+  com.mattjakeman.ExtensionManager
+  com.opera.Opera
+  com.rafaelmardojai.Blanket
+  com.slack.Slack
+  com.stremio.Stremio
+  com.usebottles.bottles
+  com.valvesoftware.SteamLink
+  de.haeckerfelix.Shortwave
+  dev.deedles.Trayscale
+  io.dbeaver.DBeaverCommunity
+  io.github.flattool.Ignition
+  io.github.realmazharhussain.GdmSettings
+  io.github.ronniedroid.concessio
+  io.github.seadve.Mousai
+  io.github.swordpuffin.wardrobe
+  io.gitlab.metadatacleaner.metadatacleaner
+  io.gitlab.news_flash.NewsFlash
+  io.gitlab.theevilskeleton.Upscaler
+  md.obsidian.Obsidian
+  org.gnome.gitlab.YaLTeR.VideoTrimmer
+  org.mozilla.thunderbird_esr
+  org.nickvision.tubeconverter
+  org.onlyoffice.desktopeditors
+  org.telegram.desktop
 )
 
 SNAP_PACKAGES=(
@@ -946,6 +967,100 @@ dconf_setup() {
   fi
 }
 
+## Organiza o "grid de aplicativos" (tela ao apertar Super) em pastas          ##
+## tematicas (Internet, Escritorio, Multimidia, etc.). A definicao vem de      ##
+## assets/app-grid.dconf. Reseta as pastas antigas antes para nao deixar lixo. ##
+setup_app_grid() {
+  print_info "Organizing GNOME app grid into folders..."
+
+  local grid_file=""
+  if [ -f "$REPO_ASSETS_DIR/app-grid.dconf" ]; then
+    grid_file="$REPO_ASSETS_DIR/app-grid.dconf"
+  elif [ -f "$CONF_FILE_DESTINATION/app-grid.dconf" ]; then
+    grid_file="$CONF_FILE_DESTINATION/app-grid.dconf"
+  fi
+
+  if [ -n "$grid_file" ]; then
+    # Limpa pastas antigas (System/Utilities/etc.) para nao sobrar residuo
+    dconf reset -f /org/gnome/desktop/app-folders/
+    dconf load /org/gnome/desktop/app-folders/ < "$grid_file"
+
+    # Layout fixo da 1a pagina: apps favoritos "soltos" + as pastas tematicas.
+    # (fica mais bonito ter icones de apps na primeira tela, nao so pastas)
+    local layout_file=""
+    if [ -f "$REPO_ASSETS_DIR/app-grid-layout.dconf" ]; then
+      layout_file="$REPO_ASSETS_DIR/app-grid-layout.dconf"
+    elif [ -f "$CONF_FILE_DESTINATION/app-grid-layout.dconf" ]; then
+      layout_file="$CONF_FILE_DESTINATION/app-grid-layout.dconf"
+    fi
+    if [ -n "$layout_file" ]; then
+      dconf load /org/gnome/shell/ < "$layout_file"
+      print_success "App grid layout (1a pagina) aplicado de: $layout_file"
+    else
+      # Sem layout salvo: reseta para o GNOME reorganizar sozinho
+      dconf reset /org/gnome/shell/app-picker-layout 2>/dev/null || true
+    fi
+    print_success "App grid organized from: $grid_file (relogin pode ser necessario)."
+  else
+    print_info "app-grid.dconf not found in $REPO_ASSETS_DIR nor $CONF_FILE_DESTINATION; skipping."
+  fi
+}
+
+## Configura "auto-mover + seguir" janelas por workspace.                      ##
+## A LISTA de apps/workspaces vem da extensao "Auto Move Windows" e e          ##
+## restaurada por install_gnome_extensions (dconf de /org/gnome/shell/ext).    ##
+## Aqui garantimos a parte que falta: o wrapper 'open-on-workspace' em         ##
+## ~/.local/bin (no PATH, referenciado pelos .desktop) e a geracao dos         ##
+## lancadores locais que, ao abrir o app, TROCAM voce para o workspace dele.   ##
+## Observacao: o "seguir" (trocar de workspace ao abrir) depende de xdotool e  ##
+## so funciona em sessao X11.                                                  ##
+setup_auto_move_workspaces() {
+  print_info "Setting up auto-move + follow windows per workspace..."
+
+  local local_bin="$HOME/.local/bin"
+  local wrapper_src="$SCRIPTS_FILE_DESTINATION/open-on-workspace"
+  local sync_src="$SCRIPTS_FILE_DESTINATION/sync-automove-launchers"
+
+  # Fallback: se ainda nao copiou os scripts para ~/debian/scripts, usa o repo
+  [ -f "$wrapper_src" ] || wrapper_src="$REPO_SCRIPTS_DIR/open-on-workspace"
+  [ -f "$sync_src" ]    || sync_src="$REPO_SCRIPTS_DIR/sync-automove-launchers"
+
+  if [ ! -f "$wrapper_src" ] || [ ! -f "$sync_src" ]; then
+    print_error "Scripts open-on-workspace/sync-automove-launchers nao encontrados (rode copy_scripts_files antes)."
+    return
+  fi
+
+  # 1) Instala o wrapper e o gerador em ~/.local/bin (no PATH; os .desktop
+  #    gerados referenciam o caminho absoluto deste wrapper).
+  mkdir -p "$local_bin"
+  install -m 0755 "$wrapper_src" "$local_bin/open-on-workspace"
+  install -m 0755 "$sync_src"    "$local_bin/sync-automove-launchers"
+  print_success "Wrapper e gerador instalados em $local_bin."
+
+  # 2) xdotool e necessario para "seguir" o app ao workspace (X11).
+  if ! command -v xdotool >/dev/null 2>&1; then
+    print_info "Instalando xdotool (necessario para trocar de workspace ao abrir)..."
+    sudo apt install -y xdotool 2>/dev/null \
+      && print_success "xdotool instalado." \
+      || print_error "Falha ao instalar xdotool (o 'seguir' nao funcionara sem ele)."
+  fi
+
+  # 3) Gera os lancadores locais a partir da lista do Auto Move Windows.
+  #    Requer que a extensao e sua lista ja estejam restauradas
+  #    (install_gnome_extensions) e que xdotool esteja presente.
+  if "$local_bin/sync-automove-launchers"; then
+    print_success "Lancadores de workspace gerados a partir da lista do Auto Move Windows."
+  else
+    print_info "Nao foi possivel gerar os lancadores agora (a lista da extensao pode"
+    print_info "exigir logout/login para estar disponivel). Rode depois:"
+    print_info "  ~/.local/bin/sync-automove-launchers"
+  fi
+
+  if [ "${XDG_SESSION_TYPE:-}" != "x11" ]; then
+    print_info "Sessao atual nao e X11: o 'seguir' (trocar de workspace ao abrir) so funciona em X11."
+  fi
+}
+
 ## Setup GNOME minimize button in windows ##
 setup_gnomesettings() {
   print_info "Setting up minimize button in GNOME interface..."
@@ -1059,6 +1174,8 @@ menu_configs() {
     echo "12) Restaurar config do Kitty (~/.config/kitty/kitty.conf)"
     echo "13) Configurar menu 'terminal' do Nautilus (Kitty + rotulo 'Terminal')"
     echo "14) Instalar nautilus-scripts (acoes de contexto: extrair, checksum, git...)"
+    echo "15) Organizar grid de apps em pastas (Internet, Escritorio, Multimidia...)"
+    echo "16) Auto-mover + seguir janelas por workspace (wrapper + lancadores)"
     echo " 0) Voltar"
     read -rp "> " o
     case "$o" in
@@ -1071,13 +1188,15 @@ menu_configs() {
       7) setup_gitcredentials; pause ;;
       8) setup_keybinds_dconf; setup_terminal_dconf; setup_general_dconf; install_gnome_extensions; dconf_setup; \
          setup_gnomesettings; setup_aliases; create_bash_aliases_link; setup_gitcredentials; \
-         setup_kitty_config; setup_nautilus_terminal; setup_nautilus_scripts; setup_cron_from_repo; pause ;;
+         setup_kitty_config; setup_nautilus_terminal; setup_nautilus_scripts; setup_app_grid; setup_auto_move_workspaces; setup_cron_from_repo; pause ;;
       9) setup_terminal_dconf; pause ;;
       10) setup_general_dconf; pause ;;
       11) setup_bashrc_from_repo; pause ;;
       12) setup_kitty_config; pause ;;
       13) setup_nautilus_terminal; pause ;;
       14) setup_nautilus_scripts; pause ;;
+      15) setup_app_grid; pause ;;
+      16) setup_auto_move_workspaces; pause ;;
       0) return ;;
       *) echo "Opcao invalida"; sleep 1 ;;
     esac
@@ -1179,6 +1298,8 @@ run_full_install() {
   install_gnome_extensions
   dconf_setup
   setup_gnomesettings
+  setup_app_grid
+  setup_auto_move_workspaces
   setup_cron_from_repo
   setup_backup_cron
   finish_setup

@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# open-on-workspace <workspace_1based> <comando> [args...]
+# Troca para o workspace indicado (GNOME/X11 via xdotool) e abre o comando la.
+# xdotool usa indice 0-based, entao subtraimos 1 do numero do workspace.
+
+set -euo pipefail
+
+if [ "$#" -lt 2 ]; then
+  echo "uso: open-on-workspace <workspace_1based> <comando> [args...]" >&2
+  exit 2
+fi
+
+ws_1based="$1"; shift
+ws_index=$(( ws_1based - 1 ))
+
+if [ "$ws_index" -lt 0 ]; then
+  echo "workspace invalido: $ws_1based" >&2
+  exit 2
+fi
+
+# So troca se o indice existir (nao passar do total de workspaces atual).
+if command -v xdotool >/dev/null 2>&1; then
+  num=$(xdotool get_num_desktops 2>/dev/null || echo 0)
+  if [ "$ws_index" -lt "$num" ]; then
+    xdotool set_desktop "$ws_index" || true
+  fi
+fi
+
+exec "$@"

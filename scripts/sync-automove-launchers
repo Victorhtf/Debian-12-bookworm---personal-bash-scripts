@@ -1,0 +1,165 @@
+#!/usr/bin/env bash
+#
+# sync-automove-launchers
+# -------------------------
+# Le a lista da extensao GNOME "Auto Move Windows" e, para cada app,
+# gera um lancador local em ~/.local/share/applications que troca para
+# o workspace definido na lista ANTES de abrir o app (via wrapper
+# open-on-workspace). Assim, ao abrir o app pelo menu/dock, voce e
+# levado automaticamente para o workspace onde a janela vai aparecer.
+#
+# Rode este script sempre que mudar a lista do Auto Move Windows.
+#
+# Reversivel: tudo que ele cria fica em ~/.local/share/applications e
+# ~/.local/bin. Use a flag --clean para remover os lancadores gerados.
+
+set -euo pipefail
+
+# ---------------------------------------------------------------------------
+# Config
+# ---------------------------------------------------------------------------
+WRAPPER="$HOME/.local/bin/open-on-workspace"
+LOCAL_APPS="$HOME/.local/share/applications"
+MARKER="X-AutoMoveGenerated=true"   # marca lancadores que ESTE script criou
+
+# Diretorios de origem dos .desktop, em ordem de prioridade.
+# NUNCA incluimos $LOCAL_APPS como origem para evitar auto-referencia.
+SRC_DIRS=(
+  "/var/lib/snapd/desktop/applications"
+  "/var/lib/flatpak/exports/share/applications"
+  "$HOME/.local/share/flatpak/exports/share/applications"
+  "/usr/local/share/applications"
+  "/usr/share/applications"
+)
+
+SCHEMADIR="$HOME/.local/share/gnome-shell/extensions/auto-move-windows@gnome-shell-extensions.gcampax.github.com/schemas"
+SCHEMA="org.gnome.shell.extensions.auto-move-windows"
+KEY="application-list"
+
+# ---------------------------------------------------------------------------
+# Modo --clean: remove apenas os lancadores que este script gerou
+# ---------------------------------------------------------------------------
+if [ "${1:-}" = "--clean" ]; then
+  removed=0
+  for f in "$LOCAL_APPS"/*.desktop; do
+    [ -e "$f" ] || continue
+    if grep -qxF "$MARKER" "$f" 2>/dev/null; then
+      rm -f "$f"
+      echo "removido: $(basename "$f")"
+      removed=$((removed+1))
+    fi
+  done
+  command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$LOCAL_APPS" 2>/dev/null || true
+  echo "limpeza concluida. $removed lancador(es) gerado(s) removido(s)."
+  exit 0
+fi
+
+# ---------------------------------------------------------------------------
+# Pre-checagens
+# ---------------------------------------------------------------------------
+if [ ! -x "$WRAPPER" ]; then
+  echo "ERRO: wrapper nao encontrado ou nao executavel: $WRAPPER" >&2
+  echo "crie-o primeiro (open-on-workspace)." >&2
+  exit 1
+fi
+
+mkdir -p "$LOCAL_APPS"
+
+# Le a lista da extensao. Formato: ['id.desktop:1', 'outro.desktop:2', ...]
+raw=$(gsettings --schemadir "$SCHEMADIR" get "$SCHEMA" "$KEY" 2>/dev/null || true)
+if [ -z "$raw" ] || [ "$raw" = "@as []" ]; then
+  echo "lista do Auto Move Windows vazia ou ilegivel. nada a fazer." >&2
+  exit 0
+fi
+
+# Normaliza: tira colchetes/aspas, troca virgulas por quebras de linha.
+entries=$(printf '%s' "$raw" \
+  | sed -e "s/^\[//" -e "s/\]$//" -e "s/'//g" \
+  | tr ',' '\n' \
+  | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' \
+  | grep -v '^$')
+
+# ---------------------------------------------------------------------------
+# Funcao: encontra o .desktop de origem de um id (ignorando LOCAL_APPS)
+# ---------------------------------------------------------------------------
+find_source() {
+  local id="$1"
+  for d in "${SRC_DIRS[@]}"; do
+    if [ -f "$d/$id" ]; then
+      printf '%s' "$d/$id"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# ---------------------------------------------------------------------------
+# Funcao: gera um lancador local reescrevendo APENAS o Exec da secao
+#         principal [Desktop Entry]. Secoes [Desktop Action ...] ficam
+#         intactas.
+# ---------------------------------------------------------------------------
+generate_launcher() {
+  local src="$1" id="$2" ws="$3"
+  local dest="$LOCAL_APPS/$id"
+
+  awk -v wrapper="$WRAPPER" -v ws="$ws" -v marker="$MARKER" '
+    BEGIN { in_entry = 0; exec_done = 0; marker_done = 0 }
+    # Detecta inicio de secao
+    /^\[/ {
+      # Ao sair da [Desktop Entry], garante que o marcador foi inserido
+      if (in_entry && !marker_done) { print marker; marker_done = 1 }
+      in_entry = ($0 == "[Desktop Entry]")
+      print
+      next
+    }
+    # Dentro da secao principal, reescreve a primeira linha Exec=
+    (in_entry && !exec_done && /^Exec=/) {
+      cmd = substr($0, 6)                      # tudo apos "Exec="
+      print "Exec=" wrapper " " ws " " cmd
+      exec_done = 1
+      next
+    }
+    # Evita duplicar o marcador se o arquivo ja o tiver (nao deveria)
+    ($0 == marker) { next }
+    { print }
+    END {
+      # Caso o arquivo termine ainda dentro da [Desktop Entry]
+      if (in_entry && !marker_done) { print marker }
+    }
+  ' "$src" > "$dest.tmp"
+
+  mv "$dest.tmp" "$dest"
+  echo "gerado: $id  (workspace $ws)  <- origem: $src"
+}
+
+# ---------------------------------------------------------------------------
+# Loop principal
+# ---------------------------------------------------------------------------
+count=0; skipped=0
+while IFS= read -r entry; do
+  [ -z "$entry" ] && continue
+  id="${entry%%:*}"      # parte antes do ':'
+  ws="${entry##*:}"      # parte depois do ':'
+
+  # valida que ws e numero
+  case "$ws" in
+    ''|*[!0-9]*)
+      echo "pulado (workspace invalido): $entry" >&2
+      skipped=$((skipped+1)); continue ;;
+  esac
+
+  if src=$(find_source "$id"); then
+    generate_launcher "$src" "$id" "$ws"
+    count=$((count+1))
+  else
+    echo "pulado (app nao instalado / .desktop nao encontrado): $id" >&2
+    skipped=$((skipped+1))
+  fi
+done <<< "$entries"
+
+command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$LOCAL_APPS" 2>/dev/null || true
+
+echo
+echo "concluido: $count lancador(es) gerado(s), $skipped pulado(s)."
+echo "dica: se o GNOME ainda usar o comportamento antigo, faca logout/login"
+echo "      (ou Alt+F2 -> 'r' -> Enter no X11) para recarregar os lancadores."
