@@ -9,12 +9,12 @@ use-custom-icon=false
 application-list=['kiro.desktop:1', 'code.desktop:1', 'postman_postman.desktop:1', 'io.dbeaver.DBeaverCommunity.desktop:1', 'com.github.IsmaelMartinez.teams_for_linux.desktop:1', 'teams-for-linux_teams-for-linux.desktop:1', 'steam.desktop:2', 'com.valvesoftware.SteamLink.desktop:2', 'com.discordapp.Discord.desktop:2', 'org.telegram.desktop.desktop:2', 'gimp.desktop:2', 'org.gnome.Totem.desktop:2', 'com.stremio.Stremio.desktop:2', 'com.usebottles.bottles.desktop:2', 'de.haeckerfelix.Shortwave.desktop:2', 'io.github.seadve.Mousai.desktop:2']
 
 [blur-my-shell]
+pipelines={'pipeline_default': {'name': <'Default'>, 'effects': <[<{'type': <'dual_kawase_blur'>, 'id': <'effect_000000000000'>, 'params': <{'unscaled_radius': <30>, 'brightness': <0.59999999999999998>}>}>]>}, 'pipeline_migrated_dynamic_blur': {'name': <'Migrated dynamic blur'>, 'effects': <[<{'type': <'dual_kawase_blur'>, 'id': <'effect_migrated_dynamic_blur'>, 'params': <{'unscaled_radius': <60>, 'brightness': <0.59999999999999998>}>}>]>}}
 rounded-blur-found=false
-settings-version=2
+settings-version=7
 
 [blur-my-shell/appfolder]
-brightness=0.59999999999999998
-sigma=30
+pipeline='pipeline_migrated_dynamic_blur'
 
 [blur-my-shell/applications]
 pipeline='pipeline_default'
@@ -24,9 +24,7 @@ pipeline='pipeline_default'
 
 [blur-my-shell/dash-to-dock]
 blur=true
-brightness=0.59999999999999998
-pipeline='pipeline_default_rounded'
-sigma=30
+pipeline='pipeline_default'
 static-blur=true
 style-dash-to-dock=0
 
@@ -37,10 +35,8 @@ pipeline='pipeline_default'
 pipeline='pipeline_default'
 
 [blur-my-shell/panel]
-brightness=0.59999999999999998
 corner-radius=0
 pipeline='pipeline_default'
-sigma=30
 
 [blur-my-shell/popup]
 blur=false
@@ -50,8 +46,7 @@ static-blur=false
 pipeline='pipeline_default'
 
 [blur-my-shell/window-list]
-brightness=0.59999999999999998
-sigma=30
+pipeline='pipeline_migrated_dynamic_blur'
 
 [caffeine]
 cli-toggle=false
