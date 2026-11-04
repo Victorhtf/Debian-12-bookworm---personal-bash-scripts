@@ -1,0 +1,67 @@
+# starship.toml - prompt do shell (restaurado para ~/.config/starship.toml).
+# Requer uma Nerd Font (JetBrainsMono Nerd Font ja instalada) para os icones.
+
+# Prompt em duas linhas: info na primeira, simbolo de digitacao na segunda.
+format = """
+$directory$git_branch$git_status$nodejs$rust$python$dotnet$docker_context$cmd_duration
+$character"""
+
+add_newline = true
+
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
+vicmd_symbol = "[❮](bold yellow)"
+
+[directory]
+style = "bold cyan"
+truncation_length = 3
+truncate_to_repo = true
+read_only = " "
+
+[git_branch]
+symbol = " "
+style = "bold purple"
+
+[git_status]
+style = "bold yellow"
+conflicted = "="
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+untracked = "?${count}"
+stashed = " ${count}"
+modified = "!${count}"
+staged = "+${count}"
+renamed = "»${count}"
+deleted = "✘${count}"
+
+[nodejs]
+symbol = " "
+style = "bold green"
+format = "[$symbol($version )]($style)"
+
+[rust]
+symbol = " "
+style = "bold red"
+format = "[$symbol($version )]($style)"
+
+[python]
+symbol = " "
+style = "bold yellow"
+format = "[$symbol($version )]($style)"
+
+[dotnet]
+symbol = " "
+style = "bold blue"
+format = "[$symbol($version )]($style)"
+
+[docker_context]
+symbol = " "
+style = "bold blue"
+format = "[$symbol$context]($style) "
+
+[cmd_duration]
+min_time = 2000
+style = "bold yellow"
+format = "[ $duration]($style) "

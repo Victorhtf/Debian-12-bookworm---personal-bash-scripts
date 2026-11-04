@@ -1,0 +1,38 @@
+# .gitignore global - aplicado a todos os repos via core.excludesfile.
+# Restaurado para ~/.gitignore_global por setup_gitconfig() no Setup_Debian.sh.
+
+# --- Sistema operacional ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# --- Editores / IDEs ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.*.sw[a-p]
+*.sublime-workspace
+
+# --- Linguagens / build ---
+node_modules/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env.local
+*.log
+dist/
+build/
+target/
+.cache/
+
+# --- Ferramentas de agentes/IA (ruido local) ---
+.aider*
+.claude/

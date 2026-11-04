@@ -147,6 +147,7 @@ eval "$(zoxide init bash)"
 # Metodo novo (fzf >= 0.48): gerencia o PROMPT_COMMAND corretamente e evita
 # o vazamento de CPR (^[[..R) que ocorria com o source antigo do key-bindings.
 command -v fzf >/dev/null && eval "$(fzf --bash)"
+command -v starship >/dev/null && eval "$(starship init bash)"
 # <<< victor aliases <<<
 
 # Incluir diretorios de binarios administrativos (iw, etc.) no PATH

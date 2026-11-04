@@ -1,0 +1,23 @@
+# Template de ~/.ssh/config - restaurado por setup_ssh_config() no Setup_Debian.sh.
+#
+# IMPORTANTE: este arquivo contem apenas o MAPA DE HOSTS (apelidos, IPs de LAN,
+# usuarios e QUAL arquivo de chave usar). NAO contem nenhuma chave privada.
+# As chaves (lgtv_webos, raspi, ...) vivem em ~/.ssh/ e NAO sao versionadas.
+#
+# A funcao setup_ssh_config() NUNCA sobrescreve um ~/.ssh/config existente:
+# se ja houver um, ela faz backup e preserva o seu; so restaura este template
+# quando nao existe config nenhum (tipicamente apos uma formatacao).
+
+Host lgtv
+    HostName 192.168.0.211
+    User root
+    IdentityFile ~/.ssh/lgtv_webos
+    IdentitiesOnly yes
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+
+Host raspi
+    HostName 192.168.0.15
+    User victorhtf
+    IdentityFile ~/.ssh/raspi
+    IdentitiesOnly yes
