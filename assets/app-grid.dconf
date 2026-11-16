@@ -7,7 +7,7 @@ name='Acessórios'
 translate=false
 
 [folders/Desenvolvimento]
-apps=['org.gnome.Boxes.desktop', 'vim.desktop', 'display-im7.q16.desktop', 'com.valvesoftware.SteamLink.desktop', 'dev.deedles.Trayscale.desktop', 'john-the-ripper_info.desktop']
+apps=['org.gnome.Boxes.desktop', 'vim.desktop', 'display-im7.q16.desktop', 'com.valvesoftware.SteamLink.desktop', 'john-the-ripper_info.desktop']
 name='Desenvolvimento'
 translate=false
 
