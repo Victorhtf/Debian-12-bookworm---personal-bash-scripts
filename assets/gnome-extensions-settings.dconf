@@ -50,8 +50,8 @@ pipeline='pipeline_default'
 pipeline='pipeline_migrated_dynamic_blur'
 
 [caffeine]
-cli-toggle=true
-indicator-position-max=2
+cli-toggle=false
+indicator-position-max=3
 
 [clipboard-indicator]
 history-size=300
